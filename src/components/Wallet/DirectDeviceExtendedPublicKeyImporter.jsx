@@ -7,8 +7,6 @@ import {
   ERROR,
   ExportExtendedPublicKey,
 } from "unchained-wallets";
-
-// Components
 import {
   Button,
   TextField,
@@ -19,7 +17,7 @@ import {
 
 import InteractionMessages from "../InteractionMessages";
 
-class HardwareWalletExtendedPublicKeyImporter extends React.Component {
+class DirectDeviceExtendedPublicKeyImporter extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -39,6 +37,7 @@ class HardwareWalletExtendedPublicKeyImporter extends React.Component {
       network,
       keystore: extendedPublicKeyImporter.method,
       bip32Path: extendedPublicKeyImporter.bip32Path,
+      includeXFP: true,
     });
   };
 
@@ -116,7 +115,8 @@ class HardwareWalletExtendedPublicKeyImporter extends React.Component {
     disableChangeMethod();
     this.setState({ extendedPublicKeyError: "", status: ACTIVE });
     try {
-      const extendedPublicKey = await this.interaction().run();
+      const result = await this.interaction().run();
+      const extendedPublicKey = result.xpub;
       validateAndSetExtendedPublicKey(extendedPublicKey, (error) => {
         this.setState({ extendedPublicKeyError: error, status: PENDING });
       });
@@ -175,7 +175,7 @@ class HardwareWalletExtendedPublicKeyImporter extends React.Component {
   };
 }
 
-HardwareWalletExtendedPublicKeyImporter.propTypes = {
+DirectDeviceExtendedPublicKeyImporter.propTypes = {
   network: PropTypes.string.isRequired,
   extendedPublicKeyImporter: PropTypes.shape({
     bip32Path: PropTypes.string,
@@ -189,4 +189,4 @@ HardwareWalletExtendedPublicKeyImporter.propTypes = {
   disableChangeMethod: PropTypes.func.isRequired,
 };
 
-export default HardwareWalletExtendedPublicKeyImporter;
+export default DirectDeviceExtendedPublicKeyImporter;

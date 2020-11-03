@@ -146,9 +146,15 @@ class CreateWallet extends React.Component {
       xpub: (xpub) => validateExtendedPublicKey(xpub, tmpNetwork),
       method: (method, index) =>
         // eslint-disable-next-line no-bitwise
-        ~["trezor", "ledger", "hermit", "xpub", "text", undefined].indexOf(
-          method
-        )
+        ~[
+          "trezor",
+          "coldcard",
+          "ledger",
+          "hermit",
+          "xpub",
+          "text",
+          undefined,
+        ].indexOf(method)
           ? ""
           : `Invalid method for extended public key ${index}`,
     };

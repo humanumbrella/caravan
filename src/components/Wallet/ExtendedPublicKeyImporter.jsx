@@ -7,9 +7,7 @@ import {
   validateExtendedPublicKey,
   NETWORKS,
 } from "unchained-bitcoin";
-import { TREZOR, LEDGER, HERMIT } from "unchained-wallets";
-
-// Components
+import { TREZOR, LEDGER, HERMIT, COLDCARD } from "unchained-wallets";
 import {
   Card,
   CardHeader,
@@ -26,12 +24,10 @@ import {
 import Copyable from "../Copyable";
 import ExtendedPublicKeyExtendedPublicKeyImporter from "./ExtendedPublicKeyExtendedPublicKeyImporter";
 import TextExtendedPublicKeyImporter from "./TextExtendedPublicKeyImporter";
-import HermitExtendedPublicKeyImporter from "./HermitExtendedPublicKeyImporter";
-import HardwareWalletExtendedPublicKeyImporter from "./HardwareWalletExtendedPublicKeyImporter";
+import IndirectDeviceExtendedPublicKeyImporter from "./IndirectDeviceExtendedPublicKeyImporter";
+import DirectDeviceExtendedPublicKeyImporter from "./DirectDeviceExtendedPublicKeyImporter";
 import EditableName from "../EditableName";
 import Conflict from "../CreateAddress/Conflict";
-
-// Actions
 import {
   setExtendedPublicKeyImporterName,
   resetExtendedPublicKeyImporterBIP32Path,
@@ -89,6 +85,7 @@ class ExtendedPublicKeyImporter extends React.Component {
           >
             <MenuItem value="">{"< Select method >"}</MenuItem>
             <MenuItem value={TREZOR}>Trezor</MenuItem>
+            <MenuItem value={COLDCARD}>Coldcard</MenuItem>
             <MenuItem value={LEDGER}>Ledger</MenuItem>
             <MenuItem value={HERMIT}>Hermit</MenuItem>
             <MenuItem value={XPUB}>Derive from extended public key</MenuItem>
@@ -114,7 +111,7 @@ class ExtendedPublicKeyImporter extends React.Component {
       extendedPublicKeyImporter.method === LEDGER
     ) {
       return (
-        <HardwareWalletExtendedPublicKeyImporter
+        <DirectDeviceExtendedPublicKeyImporter
           extendedPublicKeyImporter={extendedPublicKeyImporter}
           validateAndSetExtendedPublicKey={this.validateAndSetExtendedPublicKey}
           validateAndSetBIP32Path={this.validateAndSetBIP32Path}
@@ -127,14 +124,20 @@ class ExtendedPublicKeyImporter extends React.Component {
         />
       );
     }
-    if (extendedPublicKeyImporter.method === HERMIT) {
+    if (
+      extendedPublicKeyImporter.method === HERMIT ||
+      extendedPublicKeyImporter.method === COLDCARD
+    ) {
       return (
-        <HermitExtendedPublicKeyImporter
+        <IndirectDeviceExtendedPublicKeyImporter
           extendedPublicKeyImporter={extendedPublicKeyImporter}
           validateAndSetExtendedPublicKey={this.validateAndSetExtendedPublicKey}
           validateAndSetBIP32Path={this.validateAndSetBIP32Path}
           enableChangeMethod={this.enableChangeMethod}
           disableChangeMethod={this.disableChangeMethod}
+          addressType={addressType}
+          defaultBIP32Path={defaultBIP32Path}
+          network={network}
           resetBIP32Path={this.resetBIP32Path}
           reset={this.reset}
         />
