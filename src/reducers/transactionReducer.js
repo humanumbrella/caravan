@@ -40,6 +40,7 @@ import {
 } from "../actions/transactionActions";
 
 import { RESET_NODES_SPEND } from "../actions/walletActions";
+import { unsignedMultisigPSBT } from 'unchained-bitcoin';
 
 function sortInputs(a, b) {
   const x = a.txid.toLowerCase();
@@ -256,9 +257,15 @@ function finalizeOutputs(state, action) {
     state.inputs,
     state.outputs
   );
+  const unsignedPSBT = unsignedMultisigPSBT(
+    state.network,
+    state.inputs,
+    state.outputs,
+  )
+  console.log(unsignedPSBT.toBase64());
   return {
     ...state,
-    ...{ finalizedOutputs: action.value, unsignedTransaction },
+    ...{ finalizedOutputs: action.value, unsignedTransaction, unsignedPSBT },
   };
 }
 
@@ -318,7 +325,7 @@ function validateTransaction(state) {
   const outputTotalSats = calcOutputTotalSats(newState);
   if (!newState.inputsTotalSats.isEqualTo(outputTotalSats.plus(feeSats))) {
     const diff = outputTotalSats.plus(feeSats).minus(newState.inputsTotalSats);
-    let balanceError = "";
+    let balanceError;
     if (diff.isNaN()) {
       balanceError = "Cannot calculate total.";
     } else {
