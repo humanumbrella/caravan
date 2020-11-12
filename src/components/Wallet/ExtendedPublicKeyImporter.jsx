@@ -34,6 +34,7 @@ import {
   setExtendedPublicKeyImporterBIP32Path,
   setExtendedPublicKeyImporterMethod,
   setExtendedPublicKeyImporterExtendedPublicKey,
+  setExtendedPublicKeyImporterExtendedPublicKeyRootXfp,
   setExtendedPublicKeyImporterFinalized,
 } from "../../actions/extendedPublicKeyImporterActions";
 
@@ -401,6 +402,7 @@ ExtendedPublicKeyImporter.propTypes = {
   resetBIP32Path: PropTypes.func.isRequired,
   setBIP32Path: PropTypes.func.isRequired,
   setExtendedPublicKey: PropTypes.func.isRequired,
+  setExtendedPublicKeyRootXfp: PropTypes.func.isRequired,
   setFinalized: PropTypes.func.isRequired,
   setName: PropTypes.func.isRequired,
   setMethod: PropTypes.func.isRequired,
@@ -423,6 +425,7 @@ const mapDispatchToProps = {
   setBIP32Path: setExtendedPublicKeyImporterBIP32Path,
   setMethod: setExtendedPublicKeyImporterMethod,
   setExtendedPublicKey: setExtendedPublicKeyImporterExtendedPublicKey,
+  setExtendedPublicKeyRootXfp: setExtendedPublicKeyImporterExtendedPublicKeyRootXfp,
   setFinalized: setExtendedPublicKeyImporterFinalized,
 };
 

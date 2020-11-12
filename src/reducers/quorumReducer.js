@@ -6,6 +6,7 @@ import {
   SET_EXTENDED_PUBLIC_KEY_IMPORTER_BIP32_PATH,
   SET_EXTENDED_PUBLIC_KEY_IMPORTER_METHOD,
   SET_EXTENDED_PUBLIC_KEY_IMPORTER_EXTENDED_PUBLIC_KEY,
+  SET_EXTENDED_PUBLIC_KEY_IMPORTER_EXTENDED_PUBLIC_KEY_ROOT_XFP,
   SET_EXTENDED_PUBLIC_KEY_IMPORTER_FINALIZED,
   SET_EXTENDED_PUBLIC_KEY_IMPORTER_VISIBLE,
 } from "../actions/extendedPublicKeyImporterActions";
@@ -31,6 +32,7 @@ const initialExtendedPublicKeyImporterState = (name = "") => ({
   bip32PathModified: false,
   method: "",
   extendedPublicKey: "",
+  rootXfp: "",
   finalized: false,
   confliect: false,
 });
@@ -219,6 +221,12 @@ export default (state = createInitialState(), action) => {
         state,
         action,
         "extendedPublicKey"
+      );
+    case SET_EXTENDED_PUBLIC_KEY_IMPORTER_EXTENDED_PUBLIC_KEY_ROOT_XFP:
+      return updateExtendedPublicKeyImporterState(
+        state,
+        action,
+        "rootXfp"
       );
     case SET_EXTENDED_PUBLIC_KEY_IMPORTER_FINALIZED:
       return updateExtendedPublicKeyImporterState(

@@ -18,9 +18,7 @@ import {
 import { fetchSliceData as fetchSliceDataAction } from "../../actions/braidActions";
 import walletSelectors from "../../selectors";
 import { CARAVAN_CONFIG } from "./constants";
-
 // Components
-
 import WalletInfoCard from "./WalletInfoCard";
 import NetworkPicker from "../NetworkPicker";
 import QuorumPicker from "../QuorumPicker";
@@ -30,12 +28,10 @@ import StartingAddressIndexPicker from "../StartingAddressIndexPicker";
 import WalletGenerator from "./WalletGenerator";
 import ExtendedPublicKeyImporter from "./ExtendedPublicKeyImporter";
 import WalletActionsPanel from "./WalletActionsPanel";
-
 import {
   getUnknownAddresses,
   getUnknownAddressSlices,
 } from "../../selectors/wallet";
-
 // Actions
 import {
   setTotalSigners as setTotalSignersAction,
@@ -47,6 +43,7 @@ import {
 import {
   setExtendedPublicKeyImporterMethod as setExtendedPublicKeyImporterMethodAction,
   setExtendedPublicKeyImporterExtendedPublicKey as setExtendedPublicKeyImporterExtendedPublicKeyAction,
+  setExtendedPublicKeyImporterExtendedPublicKeyRootXfp as setExtendedPublicKeyImporterExtendedPublicKeyRootXfpAction,
   setExtendedPublicKeyImporterBIP32Path as setExtendedPublicKeyImporterBIP32PathAction,
   setExtendedPublicKeyImporterName as setExtendedPublicKeyImporterNameAction,
   setExtendedPublicKeyImporterFinalized as setExtendedPublicKeyImporterFinalizedAction,
@@ -238,6 +235,7 @@ class CreateWallet extends React.Component {
       setStartingAddressIndex,
       setExtendedPublicKeyImporterMethod,
       setExtendedPublicKeyImporterExtendedPublicKey,
+      setExtendedPublicKeyImporterExtendedPublicKeyRootXfp,
       setExtendedPublicKeyImporterBIP32Path,
       setExtendedPublicKeyImporterFinalized,
       setExtendedPublicKeyImporterName,
@@ -273,6 +271,7 @@ class CreateWallet extends React.Component {
     }
     walletConfiguration.extendedPublicKeys.forEach(
       (extendedPublicKey, index) => {
+        console.log(extendedPublicKey);
         const number = index + 1;
         setExtendedPublicKeyImporterName(number, extendedPublicKey.name);
         if (extendedPublicKey.method) {
@@ -289,6 +288,12 @@ class CreateWallet extends React.Component {
           number,
           extendedPublicKey.xpub
         );
+        if (extendedPublicKey.xfp) {
+          setExtendedPublicKeyImporterExtendedPublicKeyRootXfp(number, extendedPublicKey.xfp);
+        } else {
+          setExtendedPublicKeyImporterExtendedPublicKeyRootXfp(number, "unknown");
+        }
+
         setExtendedPublicKeyImporterFinalized(number, true);
       }
     );
@@ -687,6 +692,7 @@ const mapDispatchToProps = {
   setExtendedPublicKeyImporterMethod: setExtendedPublicKeyImporterMethodAction,
   setExtendedPublicKeyImporterExtendedPublicKey: setExtendedPublicKeyImporterExtendedPublicKeyAction,
   setExtendedPublicKeyImporterBIP32Path: setExtendedPublicKeyImporterBIP32PathAction,
+  setExtendedPublicKeyImporterExtendedPublicKeyRootXfp: setExtendedPublicKeyImporterExtendedPublicKeyRootXfpAction,
   setExtendedPublicKeyImporterName: setExtendedPublicKeyImporterNameAction,
   setExtendedPublicKeyImporterFinalized: setExtendedPublicKeyImporterFinalizedAction,
   setExtendedPublicKeyImporterVisible: setExtendedPublicKeyImporterVisibleAction,

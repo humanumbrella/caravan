@@ -47,10 +47,12 @@ class WalletControl extends React.Component {
   renderModeComponent = () => {
     const { walletMode, addNode, updateNode } = this.props;
     if (this.addressesAreLoaded()) {
-      if (walletMode === WALLET_MODES.DEPOSIT) return <WalletDeposit />;
+      if (walletMode === WALLET_MODES.DEPOSIT)
+        return <WalletDeposit />;
       if (walletMode === WALLET_MODES.SPEND)
         return <WalletSpend addNode={addNode} updateNode={updateNode} />;
-      if (walletMode === WALLET_MODES.VIEW) return <SlicesTableContainer />;
+      if (walletMode === WALLET_MODES.VIEW)
+        return <SlicesTableContainer />;
       return "";
     }
     const progress = this.progress();
