@@ -209,12 +209,15 @@ class WalletGenerator extends React.Component {
 
     for (let num=1; num<=totalSigners; num+=1) {
       let extendedPublicKey = ExtendedPublicKey.fromBase58(extendedPublicKeyImporters[num].extendedPublicKey);
-      extendedPublicKey.setRootFingerprint('f57ec65d'); //hardcode
-      //console.log(extendedPublicKeyImporters[num].xfp);
-      // extendedPublicKey.setRootFingerprint(extendedPublicKeyImporters[num].xfp);
+
+      if (extendedPublicKeyImporters[num].rootXfp === 'Unknown') {
+        extendedPublicKey.setRootFingerprint('00000000');
+      } else {
+        extendedPublicKey.setRootFingerprint(extendedPublicKeyImporters[num].rootXfp);
+      }
+
       if (extendedPublicKeyImporters[num].bip32Path === 'Unknown') {
         extendedPublicKey.setBip32Path('m'+'/0'.repeat(extendedPublicKey.depth));
-        extendedPublicKey.setRootFingerprint('77e80477'); //hardcode
       } else {
         extendedPublicKey.setBip32Path(extendedPublicKeyImporters[num].bip32Path);
       }
@@ -228,31 +231,6 @@ class WalletGenerator extends React.Component {
         requiredSigners,
         bip32Path=bip32Path.slice(2),
     );
-
-    // const publicKeys = [];
-    // for (
-    //   let extendedPublicKeyImporterNumber = 1;
-    //   extendedPublicKeyImporterNumber <= totalSigners;
-    //   extendedPublicKeyImporterNumber += 1
-    // ) {
-    //   const extendedPublicKeyImporter =
-    //     extendedPublicKeyImporters[extendedPublicKeyImporterNumber];
-    //
-    //   const publicKey = deriveChildPublicKey(
-    //     extendedPublicKeyImporter.extendedPublicKey,
-    //     bip32Path,
-    //     network
-    //   );
-    //   publicKeys.push(publicKey);
-    // }
-    // publicKeys.sort(); // BIP67
-    //
-    // const multisig = generateMultisigFromPublicKeys(
-    //   network,
-    //   addressType,
-    //   requiredSigners,
-    //   ...publicKeys
-    // );
 
     const multisig = deriveMultisigByPath(braid, bip32Path);
 

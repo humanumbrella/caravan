@@ -25,7 +25,7 @@ import {
 } from "@material-ui/core";
 import InteractionMessages from "../InteractionMessages";
 
-class HardwareWalletSignatureImporter extends React.Component {
+class DirectHardwareWalletSignatureImporter extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -265,7 +265,7 @@ class HardwareWalletSignatureImporter extends React.Component {
   };
 }
 
-HardwareWalletSignatureImporter.propTypes = {
+DirectHardwareWalletSignatureImporter.propTypes = {
   defaultBIP32Path: PropTypes.string.isRequired,
   disableChangeMethod: PropTypes.func.isRequired,
   enableChangeMethod: PropTypes.func.isRequired,
@@ -287,4 +287,4 @@ HardwareWalletSignatureImporter.propTypes = {
   validateAndSetSignature: PropTypes.func.isRequired,
 };
 
-export default HardwareWalletSignatureImporter;
+export default DirectHardwareWalletSignatureImporter;

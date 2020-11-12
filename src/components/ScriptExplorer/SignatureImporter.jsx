@@ -8,7 +8,7 @@ import {
   multisigBIP32Root,
   validateBIP32Path,
 } from "unchained-bitcoin";
-import { TREZOR, LEDGER, HERMIT } from "unchained-wallets";
+import { TREZOR, LEDGER, HERMIT, COLDCARD } from "unchained-wallets";
 
 // Components
 import {
@@ -25,7 +25,7 @@ import {
 import Copyable from "../Copyable";
 import TextSignatureImporter from "./TextSignatureImporter";
 import HermitSignatureImporter from "./HermitSignatureImporter";
-import HardwareWalletSignatureImporter from "./HardwareWalletSignatureImporter";
+import DirectHardwareWalletSignatureImporter from "./DirectHardwareWalletSignatureImporter";
 import EditableName from "../EditableName";
 
 // Actions
@@ -40,6 +40,7 @@ import {
 } from "../../actions/signatureImporterActions";
 
 import "react-table/react-table.css";
+import IndirectHardwareWalletSignatureImporter from './IndirectHardwareWalletSignatureImporter';
 
 const TEXT = "text";
 const UNKNOWN = "unknown";
@@ -122,6 +123,7 @@ class SignatureImporter extends React.Component {
               <MenuItem value="">{"< Select method >"}</MenuItem>
               <MenuItem value={TREZOR}>Trezor</MenuItem>
               <MenuItem value={LEDGER}>Ledger</MenuItem>
+              <MenuItem value={COLDCARD}>Coldcard</MenuItem>
               <MenuItem value={HERMIT}>Hermit</MenuItem>
               <MenuItem value={TEXT}>Enter as text</MenuItem>
             </Select>
@@ -153,13 +155,14 @@ class SignatureImporter extends React.Component {
         />
       );
     }
-    if (signatureImporter.method === HERMIT) {
+    if (signatureImporter.method === HERMIT ||
+        signatureImporter.method === COLDCARD) {
       return (
-        <HermitSignatureImporter
+        <IndirectHardwareWalletSignatureImporter
           network={network}
           signatureImporter={signatureImporter}
           inputs={inputs}
-          outputs={outputs}
+          outputs={outputs}a
           validateAndSetBIP32Path={this.validateAndSetBIP32Path}
           resetBIP32Path={this.resetBIP32Path}
           defaultBIP32Path={this.defaultBIP32Path()}
@@ -174,7 +177,7 @@ class SignatureImporter extends React.Component {
       signatureImporter.method === LEDGER
     ) {
       return (
-        <HardwareWalletSignatureImporter
+        <DirectHardwareWalletSignatureImporter
           network={network}
           signatureImporter={signatureImporter}
           signatureImporters={signatureImporters}
