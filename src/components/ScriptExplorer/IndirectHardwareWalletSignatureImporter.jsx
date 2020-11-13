@@ -58,7 +58,7 @@ class IndirectHardwareWalletSignatureImporter extends React.Component {
   handlePSBTDownloadClick = () => {
     const {walletName} = this.props;
     const interaction = this.interaction();
-    let body = interaction.request();
+    let body = interaction.request().toBase64();
     const timestamp = moment().format("HHmm");
     const filename = `${timestamp}-${walletName}.psbt`;
     downloadFile(body, filename);

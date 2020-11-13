@@ -4,10 +4,6 @@ import { connect } from "react-redux";
 import { map } from "lodash";
 import BigNumber from "bignumber.js";
 import { bitcoinsToSatoshis, satoshisToBitcoins } from "unchained-bitcoin";
-
-// Actions
-
-// Components
 import {
   Grid,
   Button,
@@ -30,11 +26,9 @@ import {
   resetOutputs as resetOutputsAction,
 } from "../../actions/transactionActions";
 import { fetchFeeEstimate } from "../../blockchain";
+import {MIN_SATS_PER_BYTE_FEE} from '../Wallet/constants';
 import OutputEntry from "./OutputEntry";
-
-// Assets
 import styles from "./styles.module.scss";
-import {BASE_SATS_PER_BYTE_FEE} from '../Wallet/constants';
 
 class OutputsForm extends React.Component {
   static unitLabel(label, options) {
@@ -190,17 +184,18 @@ class OutputsForm extends React.Component {
 
   getFeeEstimate = async () => {
     const { client, network, setFeeRate } = this.props;
-    const defaultFeeRate = BASE_SATS_PER_BYTE_FEE;
-    let newFeeRate = defaultFeeRate;
+    let feeEstimate;
     let feeRateFetchError = "";
     try {
-      newFeeRate = await fetchFeeEstimate(network, client);
+      feeEstimate = await fetchFeeEstimate(network, client);
     } catch (e) {
       // eslint-disable-next-line no-console
       console.error(e);
       feeRateFetchError = "There was an error fetching the fee rate.";
     } finally {
-      setFeeRate(!isNaN(newFeeRate) ? newFeeRate.toString() : defaultFeeRate.toString());
+      setFeeRate(!isNaN(feeEstimate)
+        ? feeEstimate.toString()
+        : MIN_SATS_PER_BYTE_FEE.toString());
       this.setState({ feeRateFetchError });
     }
   };
