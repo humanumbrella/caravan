@@ -457,8 +457,7 @@ ${this.extendedPublicKeyImporterBIP32Paths()}
       extendedPublicKeyImporter.rootXfp === "Unknown"
         ? "00000000"
         : extendedPublicKeyImporter.rootXfp;
-    const importer =
-      extendedPublicKeyImporter.method === "unknown"
+    return extendedPublicKeyImporter.method === "unknown"
         ? `    {
         "name": "${extendedPublicKeyImporter.name}",
         "bip32Path": "${bip32Path}",
@@ -472,7 +471,6 @@ ${this.extendedPublicKeyImporterBIP32Paths()}
         "xfp" : "${rootFingerprint}",
         "method": "${extendedPublicKeyImporter.method}"
       }`;
-    return importer;
   };
 
   walletDetailsFilename = () => {

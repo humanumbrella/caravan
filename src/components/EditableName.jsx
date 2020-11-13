@@ -72,7 +72,7 @@ class EditableName extends React.Component {
           <Edit />
         </IconButton>
         &nbsp;
-        <span data-cy="editable-name-value">{name}</span>
+        <span data-cy="editable-name-value" style={{cursor:'pointer'}} onClick={this.startEditing}>{name}</span>
       </span>
     );
   };
