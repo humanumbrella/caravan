@@ -34,6 +34,7 @@ import OutputEntry from "./OutputEntry";
 
 // Assets
 import styles from "./styles.module.scss";
+import {BASE_SATS_PER_BYTE_FEE} from '../Wallet/constants';
 
 class OutputsForm extends React.Component {
   static unitLabel(label, options) {
@@ -189,7 +190,8 @@ class OutputsForm extends React.Component {
 
   getFeeEstimate = async () => {
     const { client, network, setFeeRate } = this.props;
-    let newFeeRate = 1;
+    const defaultFeeRate = BASE_SATS_PER_BYTE_FEE;
+    let newFeeRate = defaultFeeRate;
     let feeRateFetchError = "";
     try {
       newFeeRate = await fetchFeeEstimate(network, client);
@@ -198,7 +200,7 @@ class OutputsForm extends React.Component {
       console.error(e);
       feeRateFetchError = "There was an error fetching the fee rate.";
     } finally {
-      setFeeRate(newFeeRate.toString());
+      setFeeRate(!isNaN(newFeeRate) ? newFeeRate.toString() : defaultFeeRate.toString());
       this.setState({ feeRateFetchError });
     }
   };

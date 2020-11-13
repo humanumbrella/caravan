@@ -48,13 +48,14 @@ class ExtendedPublicKeySelector extends React.Component {
   };
 
   renderSignatureImporter = () => {
-    const { number } = this.props;
+    const { number, walletDetailsText } = this.props;
     const extendedPublicKeyImporter = this.getAssociatedExtendedPublicKeyImporter();
     return (
       <Box mt={2}>
         <SignatureImporter
           number={number}
           extendedPublicKeyImporter={extendedPublicKeyImporter}
+          walletDetailsText={walletDetailsText}
         />
       </Box>
     );

@@ -271,7 +271,6 @@ class CreateWallet extends React.Component {
     }
     walletConfiguration.extendedPublicKeys.forEach(
       (extendedPublicKey, index) => {
-        console.log(extendedPublicKey);
         const number = index + 1;
         setExtendedPublicKeyImporterName(number, extendedPublicKey.name);
         if (extendedPublicKey.method) {
@@ -454,17 +453,23 @@ ${this.extendedPublicKeyImporterBIP32Paths()}
       extendedPublicKeyImporter.method === "text"
         ? "Unknown (make sure you have written this down previously!)"
         : extendedPublicKeyImporter.bip32Path;
+    const rootFingerprint =
+      extendedPublicKeyImporter.rootXfp === "Unknown"
+        ? "00000000"
+        : extendedPublicKeyImporter.rootXfp;
     const importer =
       extendedPublicKeyImporter.method === "unknown"
         ? `    {
         "name": "${extendedPublicKeyImporter.name}",
         "bip32Path": "${bip32Path}",
-        "xpub": "${extendedPublicKeyImporter.extendedPublicKey}"
+        "xpub": "${extendedPublicKeyImporter.extendedPublicKey}",
+        "xfp" : "${rootFingerprint}"
         }`
         : `    {
         "name": "${extendedPublicKeyImporter.name}",
         "bip32Path": "${bip32Path}",
         "xpub": "${extendedPublicKeyImporter.extendedPublicKey}",
+        "xfp" : "${rootFingerprint}",
         "method": "${extendedPublicKeyImporter.method}"
       }`;
     return importer;
@@ -596,6 +601,7 @@ ${this.extendedPublicKeyImporterBIP32Paths()}
                   generating={generating}
                   setGenerating={(value) => this.setGenerating(value)}
                   downloadWalletDetails={this.downloadWalletDetails}
+                  walletDetailsText={this.walletDetailsText}
                   // eslint-disable-next-line no-return-assign
                   refreshNodes={(click) => (this.generatorRefresh = click)} // FIXME TIGHT COUPLING ALERT, this calls function downstream
                 />

@@ -5,7 +5,7 @@ import {
   HERMIT,
   PENDING,
   UNSUPPORTED,
-  SignMultisigTransaction,
+  SignMultisigTransaction, ConfigAdapter, ACTIVE,
 } from "unchained-wallets";
 
 // Components
@@ -14,13 +14,16 @@ import {
   Box,
   TextField,
   Button,
-  FormHelperText, FormGroup,
+  FormHelperText, FormGroup, Table, TableHead, TableRow, TableCell, TableBody,
 } from "@material-ui/core";
 import HermitReader from "../Hermit/HermitReader";
 import HermitDisplayer from "../Hermit/HermitDisplayer";
 import InteractionMessages from "../InteractionMessages";
-import {ColdcardJSONReader} from '../Coldcard';
-import {unsignedMultisigPSBT} from 'unchained-bitcoin';
+import {ColdcardPSBTReader} from '../Coldcard';
+import {satoshisToBitcoins, unsignedMultisigPSBT} from 'unchained-bitcoin';
+import {downloadFile} from '../../utils';
+import {connect} from 'react-redux';
+import moment from 'moment';
 
 class IndirectHardwareWalletSignatureImporter extends React.Component {
   constructor(props) {
@@ -53,27 +56,85 @@ class IndirectHardwareWalletSignatureImporter extends React.Component {
   };
 
   handlePSBTDownloadClick = () => {
+    const {walletName} = this.props;
     const interaction = this.interaction();
     let body = interaction.request();
-    //const timestamp = moment().format("HHmm");
-    const filename = 'test.psbt' // `${timestamp}-global-name.psbt`;
-    this.downloadTextFile(body, filename);
+    const timestamp = moment().format("HHmm");
+    const filename = `${timestamp}-${walletName}.psbt`;
+    downloadFile(body, filename);
   };
 
-  downloadTextFile(body, filename) {
-    const blob = new Blob([body], { type: "text/plain" });
-    if (window.navigator.msSaveOrOpenBlob) {
-      window.navigator.msSaveBlob(blob, filename);
-    } else {
-      const elem = window.document.createElement("a");
-      elem.href = window.URL.createObjectURL(blob);
-      elem.download = filename;
-      document.body.appendChild(elem);
-      elem.click();
-      document.body.removeChild(elem);
-    }
-  }
+  handleWalletConfigDownloadClick = () => {
+    const {walletDetailsText} = this.props;
+    this.reshapeConfig(walletDetailsText());
+  };
 
+  // This tries to reshape it to a Coldcard Wallet Config via unchained-wallets
+  reshapeConfig = (walletDetails) => {
+    let body = "";
+    const walletConfig = JSON.parse(walletDetails);
+    const startingAddressIndex = walletConfig.startingAddressIndex;
+    walletConfig.name =
+      startingAddressIndex === 0
+        ? walletConfig.name
+        : `${walletConfig.name}_${startingAddressIndex.toString()}`;
+
+    let interaction = ConfigAdapter({KEYSTORE: COLDCARD, jsonConfig: walletConfig});
+    // So an error will be thrown if the config file doesn't have all the necessary pieces... ^
+    body = interaction.adapt();
+    if (!body) {
+      this.errorMessage =
+        "Product is not Coldcard ready. Please perform keychecks on each key to make sure root fingerprints are available.";
+      return;
+    }
+    const filename = `wc-${walletConfig.name}.txt`;
+    downloadFile(body, filename);
+  };
+
+
+  renderDeviceConfirmInfo = () => {
+    const {fee, inputsTotalSats} = this.props;
+    return (
+      <Box>
+        <p>Your device will ask you to verify the following information:</p>
+        <Table>
+          <TableHead>
+            <TableRow hover>
+              <TableCell/>
+              <TableCell>Amount (BTC)</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {this.renderTargets()}
+            <TableRow hover>
+              <TableCell>Fee</TableCell>
+              <TableCell>{fee}</TableCell>
+            </TableRow>
+            <TableRow hover>
+              <TableCell>Total</TableCell>
+              <TableCell>
+                {satoshisToBitcoins(inputsTotalSats).toString()}
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+      </Box>
+    );
+  };
+
+  renderTargets = () => {
+    const {outputs} = this.props;
+    return outputs.map((output) => {
+      return (
+        <TableRow hover key={output.address}>
+          <TableCell>
+            Address <code>{output.address}</code>
+          </TableCell>
+          <TableCell>{output.amount}</TableCell>
+        </TableRow>
+      );
+    });
+  };
 
   render = () => {
     const {
@@ -129,49 +190,56 @@ class IndirectHardwareWalletSignatureImporter extends React.Component {
 
 
           {signatureImporter.method === HERMIT ? (
-            <div>
-              <Grid container justify="center">
-                <Grid item>
-                  <HermitDisplayer width={400} string={interaction.request()}/>
+              <div>
+                <Grid container justify="center">
+                  <Grid item>
+                    <HermitDisplayer width={400} string={interaction.request()}/>
+                  </Grid>
                 </Grid>
-              </Grid>
-              <HermitReader
-                startText="Scan Signature QR Code"
-                interaction={interaction}
-                onStart={disableChangeMethod}
-                onSuccess={this.import}
-                onClear={this.clear}
-              />
-
-              <InteractionMessages
-                messages={interaction.messagesFor({state: status})}
-                excludeCodes={["hermit.signature_request", "hermit.command"]}
-              />
-            </div>
-          ) : // COLDCARD
-            <div>
-            {console.log(interaction.request())}
-
-              <Button
-                type="button"
-                variant="contained"
-                onClick={this.handlePSBTDownloadClick}
-                //disabled={status !== PENDING}
-              >
-                Download PSBT
-              </Button>
-                <ColdcardJSONReader
+                <HermitReader
+                  startText="Scan Signature QR Code"
                   interaction={interaction}
                   onStart={disableChangeMethod}
                   onSuccess={this.import}
-                  onClear={this.onClear}
-                  validFileFormats=".json"
+                  onClear={this.clear}
                 />
+
                 <InteractionMessages
                   messages={interaction.messagesFor({state: status})}
-                  excludeCodes={["bip32"]}
+                  excludeCodes={["hermit.signature_request", "hermit.command"]}
                 />
               </div>
+            ) : // COLDCARD
+            <div>
+              {this.renderDeviceConfirmInfo()}
+              <Button
+                type="button"
+                variant="contained"
+                color="primary"
+                onClick={this.handlePSBTDownloadClick}
+              >
+                Download PSBT
+              </Button>
+              <Button
+                type="button"
+                variant="contained"
+                onClick={this.handleWalletConfigDownloadClick}
+              >
+                Download Coldcard Config
+              </Button>
+              <ColdcardPSBTReader
+                interaction={interaction}
+                onStart={disableChangeMethod}
+                onSuccess={this.handlePSBTSignatureSubmission}
+                onClear={this.clear}
+                fileType="PSBT"
+                validFileFormats=".psbt"
+              />
+              <InteractionMessages
+                messages={interaction.messagesFor({state: status})}
+                excludeCodes={["bip32"]}
+              />
+            </div>
           }
 
 
@@ -188,6 +256,31 @@ class IndirectHardwareWalletSignatureImporter extends React.Component {
     validateAndSetSignature(signature, (signatureError) => {
       this.setState({signatureError});
     });
+  };
+
+  handlePSBTSignatureSubmission = data => {
+    const {validateAndSetSignature, enableChangeMethod, signatureImporter} = this.props;
+    let pubKeyNotFound = true;
+    try {
+      // signatureData is one or more sets of signatures that are keyed
+      // based on which pubkey the signatures are signing.
+      const signatureData = this.interaction().parse(data);
+      console.log(signatureData);
+      const signatureSetsKeys = Object.keys(signatureData);
+
+      signatureSetsKeys.forEach((pubkey) => {
+          const signatures = signatureData[pubkey];
+          this.setState({signatureError: ""});
+          enableChangeMethod();
+          validateAndSetSignature(signatures, (signatureError) => {
+            this.setState({signatureError});
+          });
+        },
+      );
+    } catch (e) {
+      e.errorType = "Coldcard Signing Error";
+      this.setState({signatureError: e.message});
+    }
   };
 
   clear = () => {
@@ -235,4 +328,12 @@ IndirectHardwareWalletSignatureImporter.propTypes = {
   disableChangeMethod: PropTypes.func.isRequired,
 };
 
-export default IndirectHardwareWalletSignatureImporter;
+function mapStateToProps(state) {
+  return {
+    walletName: state.wallet.common.walletName,
+  };
+}
+
+const mapDispatchToProps = {};
+
+export default connect(mapStateToProps, mapDispatchToProps)(IndirectHardwareWalletSignatureImporter);

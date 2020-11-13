@@ -6,7 +6,23 @@ import { Grid, Button, Box, FormHelperText } from "@material-ui/core";
 import { CloudUpload as UploadIcon } from "@material-ui/icons";
 import styles from "./ColdcardFileReader.module.scss";
 
-export default class ColdcardJSONReader extends Component {
+class ColdcardFileReaderBase extends Component {
+  static propTypes = {
+    onStart: PropTypes.func.isRequired,
+    onSuccess: PropTypes.func.isRequired,
+    onClear: PropTypes.func.isRequired,
+    interaction: PropTypes.shape({
+      messagesFor: PropTypes.func,
+      parse: PropTypes.func,
+    }).isRequired,
+    maxFileSize: PropTypes.number,
+    validFileFormats: PropTypes.string.isRequired,
+  };
+
+  static defaultProps = {
+    maxFileSize: 2097152, // 2MB
+  };
+
   constructor(props) {
     super(props);
     this.state = {
@@ -107,14 +123,6 @@ export default class ColdcardJSONReader extends Component {
     }
   };
 
-  handleStart = () => {
-    const { onStart } = this.props;
-    this.setState({ status: ACTIVE, error: "" });
-    if (onStart) {
-      onStart();
-    }
-  };
-
   handleError = (error) => {
     const { onClear } = this.props;
     this.setState({ status: "error", error: error.message });
@@ -123,43 +131,19 @@ export default class ColdcardJSONReader extends Component {
     }
   };
 
-  handleScan = (data) => {
-    const { onSuccess, interaction } = this.props;
-    if (data) {
-      try {
-        const result = interaction().parse(data);
-        onSuccess(result);
-        this.setState({ status: "success" });
-      } catch (e) {
-        this.handleError(e);
-      }
-    }
-  };
-
-  handleStop = () => {
-    const { onClear } = this.props;
-    this.setState({
-      status: PENDING,
-      error: "",
-    });
-    if (onClear) {
-      onClear();
-    }
-  };
+  // handleScan = (data) => {
+  //   const { onSuccess, interaction } = this.props;
+  //   if (data) {
+  //     try {
+  //       const result = interaction().parse(data);
+  //       onSuccess(result);
+  //       this.setState({ status: "success" });
+  //     } catch (e) {
+  //       this.handleError(e);
+  //     }
+  //   }
+  // };
 }
 
-ColdcardJSONReader.propTypes = {
-  onStart: PropTypes.func.isRequired,
-  onSuccess: PropTypes.func.isRequired,
-  onClear: PropTypes.func.isRequired,
-  interaction: PropTypes.shape({
-    messagesFor: PropTypes.func,
-    parse: PropTypes.func,
-  }).isRequired,
-  maxFileSize: PropTypes.number,
-  validFileFormats: PropTypes.string.isRequired,
-};
-
-ColdcardJSONReader.defaultProps = {
-  maxFileSize: 2097152, // 2MB
-};
+export const ColdcardJSONReader = ColdcardFileReaderBase;
+export const ColdcardPSBTReader = ColdcardFileReaderBase;

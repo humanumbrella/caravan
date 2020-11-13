@@ -257,15 +257,9 @@ function finalizeOutputs(state, action) {
     state.inputs,
     state.outputs
   );
-  const unsignedPSBT = unsignedMultisigPSBT(
-    state.network,
-    state.inputs,
-    state.outputs,
-  )
-  console.log(unsignedPSBT.toBase64());
   return {
     ...state,
-    ...{ finalizedOutputs: action.value, unsignedTransaction, unsignedPSBT },
+    ...{ finalizedOutputs: action.value, unsignedTransaction },
   };
 }
 

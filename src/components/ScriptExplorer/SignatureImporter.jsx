@@ -146,6 +146,7 @@ class SignatureImporter extends React.Component {
       fee,
       isWallet,
       extendedPublicKeyImporter,
+      walletDetailsText,
     } = this.props;
     if (signatureImporter.method === TEXT) {
       return (
@@ -162,13 +163,16 @@ class SignatureImporter extends React.Component {
           network={network}
           signatureImporter={signatureImporter}
           inputs={inputs}
-          outputs={outputs}a
+          outputs={outputs}
+          inputsTotalSats={inputsTotalSats}
+          fee={fee}
           validateAndSetBIP32Path={this.validateAndSetBIP32Path}
           resetBIP32Path={this.resetBIP32Path}
           defaultBIP32Path={this.defaultBIP32Path()}
           validateAndSetSignature={this.validateAndSetSignature}
           enableChangeMethod={this.enableChangeMethod}
           disableChangeMethod={this.disableChangeMethod}
+          walletDetailsText={walletDetailsText}
         />
       );
     }
