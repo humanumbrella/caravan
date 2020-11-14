@@ -1,4 +1,3 @@
-import {ColdcardJSONReader, ColdcardPSBTReader} from "./ColdcardFileReader";
-import ColdcardRequest from "./ColdcardRequest";
+import { ColdcardJSONReader, ColdcardPSBTReader } from "./ColdcardFileReader";
 
-export { ColdcardRequest, ColdcardJSONReader, ColdcardPSBTReader };
+export { ColdcardJSONReader, ColdcardPSBTReader };

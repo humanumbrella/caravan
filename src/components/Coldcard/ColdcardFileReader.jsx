@@ -1,16 +1,14 @@
-import React, { Component } from "react";
+import React, {Component} from "react";
 import PropTypes from "prop-types";
 import Dropzone from "react-dropzone";
-import { PENDING, ACTIVE } from "unchained-wallets";
-import { Grid, Button, Box, FormHelperText } from "@material-ui/core";
-import { CloudUpload as UploadIcon } from "@material-ui/icons";
+import {Grid, Box} from "@material-ui/core";
+import {CloudUpload as UploadIcon} from "@material-ui/icons";
 import styles from "./ColdcardFileReader.module.scss";
 
 class ColdcardFileReaderBase extends Component {
   static propTypes = {
-    onStart: PropTypes.func.isRequired,
     onSuccess: PropTypes.func.isRequired,
-    onClear: PropTypes.func.isRequired,
+    setError: PropTypes.func.isRequired,
     interaction: PropTypes.shape({
       messagesFor: PropTypes.func,
       parse: PropTypes.func,
@@ -26,8 +24,6 @@ class ColdcardFileReaderBase extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      status: PENDING,
-      error: "",
       selectedFile: null,
       fileType: props.fileType || "JSON",
       acceptedFiles: [],
@@ -36,72 +32,28 @@ class ColdcardFileReaderBase extends Component {
   }
 
   render = () => {
-    const { status, error, fileType, rejectedFiles } = this.state;
-    const { maxFileSize, validFileFormats } = this.props;
+    const {maxFileSize, validFileFormats} = this.props;
+    const {fileType} = this.state;
 
-    if (status === PENDING) {
-      return (
-        <Grid container direction="column">
-          <p>When you are ready, upload the JSON file from your Coldcard:</p>
-          <Box>
-            <Dropzone
-              className={styles.dropzone}
-              onDrop={this.onDrop}
-              multiple={false}
-              minSize={1}
-              maxSize={maxFileSize}
-              accept={validFileFormats}
-            >
-              <UploadIcon classes={{ root: styles.uploadIcon }} />
-              <p className={styles.instruction}>
-                {fileType === "JSON" ? "Upload The XPUB" : "Upload Signed PSBT"}
-              </p>
-            </Dropzone>
-
-            {rejectedFiles.length > 0 && (
-              <div className="has-danger invalid-feedback">
-                <p>The file you attempted to upload was unacceptable.</p>
-              </div>
-            )}
-          </Box>
-        </Grid>
-      );
-    }
-
-    if (status === ACTIVE) {
-      return (
-        <Grid container direction="column">
-          <Grid item>
-            <Button
-              variant="contained"
-              color="secondary"
-              size="small"
-              onClick={this.handleStop}
-            >
-              Cancel
-            </Button>
-          </Grid>
-        </Grid>
-      );
-    }
-
-    if (status === "error" || status === "success") {
-      return (
-        <div>
-          <FormHelperText error>{error}</FormHelperText>
-          <Button
-            variant="contained"
-            color="secondary"
-            size="small"
-            onClick={this.handleStop}
-          >
-            Reset
-          </Button>
-        </div>
-      );
-    }
-
-    return null;
+    return (
+      <Grid container direction="column">
+        <p>When you are ready, upload the {fileType} file from your Coldcard:</p>
+        <Box>
+          <Dropzone
+            className={styles.dropzone}
+            onDrop={this.onDrop}
+            multiple={false}
+            minSize={1}
+            maxSize={maxFileSize}
+            accept={validFileFormats}>
+            <UploadIcon classes={{root: styles.uploadIcon}}/>
+            <p className={styles.instruction}>
+              {fileType === "JSON" ? "Upload The XPUB" : "Upload Signed PSBT"}
+            </p>
+          </Dropzone>
+        </Box>
+      </Grid>
+    );
   };
 
   singleAcceptedFile = (acceptedFiles, rejectedFiles) => {
@@ -109,8 +61,9 @@ class ColdcardFileReaderBase extends Component {
   };
 
   onDrop = (acceptedFiles, rejectedFiles) => {
-    const { onSuccess } = this.props;
-    const stateUpdate = { acceptedFiles, rejectedFiles };
+    const {onSuccess, setError} = this.props;
+    const {fileType} = this.state;
+    const stateUpdate = {acceptedFiles, rejectedFiles};
     if (this.singleAcceptedFile(acceptedFiles, rejectedFiles)) {
       const file = acceptedFiles[0];
       const reader = new FileReader();
@@ -119,30 +72,14 @@ class ColdcardFileReaderBase extends Component {
       };
       this.setState(stateUpdate, () => reader.readAsText(file));
     } else {
+      if (rejectedFiles.length === 1) {
+        setError(`The file you attempted to upload was unacceptable. File type must be .${fileType.toLowerCase()}.`);
+      } else if (rejectedFiles.length > 1) {
+        setError(`This dropzone only accepts a single file.`);
+      }
       this.setState(stateUpdate);
     }
   };
-
-  handleError = (error) => {
-    const { onClear } = this.props;
-    this.setState({ status: "error", error: error.message });
-    if (onClear) {
-      onClear();
-    }
-  };
-
-  // handleScan = (data) => {
-  //   const { onSuccess, interaction } = this.props;
-  //   if (data) {
-  //     try {
-  //       const result = interaction().parse(data);
-  //       onSuccess(result);
-  //       this.setState({ status: "success" });
-  //     } catch (e) {
-  //       this.handleError(e);
-  //     }
-  //   }
-  // };
 }
 
 export const ColdcardJSONReader = ColdcardFileReaderBase;

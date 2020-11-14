@@ -8,11 +8,11 @@ import {
   PENDING,
   UNSUPPORTED,
 } from "unchained-wallets";
-import {Button, FormGroup, FormHelperText, Grid, TextField} from "@material-ui/core";
+import { Button, FormGroup, FormHelperText, Grid, TextField } from "@material-ui/core";
 import HermitReader from "../Hermit/HermitReader";
 import InteractionMessages from "../InteractionMessages";
 import { ColdcardJSONReader } from "../Coldcard";
-import {MAINNET} from 'unchained-bitcoin';
+import { MAINNET } from 'unchained-bitcoin';
 
 class IndirectDeviceExtendedPublicKeyImporter extends React.Component {
 
@@ -96,7 +96,8 @@ class IndirectDeviceExtendedPublicKeyImporter extends React.Component {
           interaction={interaction}
           onStart={disableChangeMethod}
           onSuccess={this.import}
-          onClear={this.onClear}
+          setError={this.setError}
+          fileType="JSON"
           validFileFormats=".json"
         />
         <InteractionMessages

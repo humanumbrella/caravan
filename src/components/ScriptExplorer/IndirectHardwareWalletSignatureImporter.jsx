@@ -7,8 +7,6 @@ import {
   UNSUPPORTED,
   SignMultisigTransaction, ConfigAdapter, ACTIVE,
 } from "unchained-wallets";
-
-// Components
 import {
   Grid,
   Box,
@@ -62,6 +60,7 @@ class IndirectHardwareWalletSignatureImporter extends React.Component {
     const timestamp = moment().format("HHmm");
     const filename = `${timestamp}-${walletName}.psbt`;
     downloadFile(body, filename);
+    this.setState({status: ACTIVE});
   };
 
   handleWalletConfigDownloadClick = () => {
@@ -141,6 +140,7 @@ class IndirectHardwareWalletSignatureImporter extends React.Component {
       signatureImporter,
       disableChangeMethod,
       resetBIP32Path,
+      extendedPublicKeyImporter,
     } = this.props;
     const {bip32PathError, signatureError, status} = this.state;
     const interaction = this.interaction();
@@ -154,7 +154,11 @@ class IndirectHardwareWalletSignatureImporter extends React.Component {
     }
     return (
       <Box mt={2}>
-        <Grid container>
+        {(extendedPublicKeyImporter === null ||
+          typeof extendedPublicKeyImporter === "undefined" ||
+          extendedPublicKeyImporter.method === "text") && (
+            <>
+              <Grid container>
           <Grid item md={10}>
             <TextField
               name="bip32Path"
@@ -184,6 +188,8 @@ class IndirectHardwareWalletSignatureImporter extends React.Component {
         <FormHelperText>
           Use the default value if you don&rsquo;t understand BIP32 paths.
         </FormHelperText>
+          </>
+        )}
 
 
         <Box mt={2}>
@@ -231,7 +237,7 @@ class IndirectHardwareWalletSignatureImporter extends React.Component {
                 interaction={interaction}
                 onStart={disableChangeMethod}
                 onSuccess={this.handlePSBTSignatureSubmission}
-                onClear={this.clear}
+                setError={this.setError}
                 fileType="PSBT"
                 validFileFormats=".psbt"
               />
@@ -259,29 +265,44 @@ class IndirectHardwareWalletSignatureImporter extends React.Component {
   };
 
   handlePSBTSignatureSubmission = data => {
-    const {validateAndSetSignature, enableChangeMethod, signatureImporter} = this.props;
-    let pubKeyNotFound = true;
+    const {validateAndSetSignature, enableChangeMethod} = this.props;
     try {
       // signatureData is one or more sets of signatures that are keyed
       // based on which pubkey the signatures are signing.
       const signatureData = this.interaction().parse(data);
       console.log(signatureData);
       const signatureSetsKeys = Object.keys(signatureData);
+      const signatures = [];
 
       signatureSetsKeys.forEach((pubkey) => {
-          const signatures = signatureData[pubkey];
-          this.setState({signatureError: ""});
-          enableChangeMethod();
-          validateAndSetSignature(signatures, (signatureError) => {
-            this.setState({signatureError});
-          });
+        signatures.push(...signatureData[pubkey]);
         },
       );
+
+      // signatureSetsKeys.forEach((pubkey) => {
+      //     const signatures = signatureData[pubkey];
+      //     this.setState({signatureError: ""});
+      //     enableChangeMethod();
+      //     validateAndSetSignature(signatures, (signatureError) => {
+      //       this.setState({signatureError});
+      //     });
+      //   },
+      // );
+
+      this.setState({signatureError: ""});
+      enableChangeMethod();
+      validateAndSetSignature(signatures, (signatureError) => {
+        this.setState({signatureError});
+      });
     } catch (e) {
       e.errorType = "Coldcard Signing Error";
       this.setState({signatureError: e.message});
     }
   };
+
+  setError = (value) => {
+    this.setState({signatureError: value});
+  }
 
   clear = () => {
     const {resetBIP32Path, enableChangeMethod} = this.props;
