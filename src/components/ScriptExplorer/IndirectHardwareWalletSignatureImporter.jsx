@@ -12,13 +12,13 @@ import {
   Box,
   TextField,
   Button,
-  FormHelperText, FormGroup, Table, TableHead, TableRow, TableCell, TableBody,
+  FormHelperText, Table, TableHead, TableRow, TableCell, TableBody,
 } from "@material-ui/core";
-import HermitReader from "../Hermit/HermitReader";
-import HermitDisplayer from "../Hermit/HermitDisplayer";
+import {HermitReader} from "../Hermit";
+import {HermitDisplayer} from "../Hermit";
 import InteractionMessages from "../InteractionMessages";
 import {ColdcardPSBTReader} from '../Coldcard';
-import {satoshisToBitcoins, unsignedMultisigPSBT} from 'unchained-bitcoin';
+import {satoshisToBitcoins} from 'unchained-bitcoin';
 import {downloadFile} from '../../utils';
 import {connect} from 'react-redux';
 import moment from 'moment';
@@ -36,7 +36,6 @@ class IndirectHardwareWalletSignatureImporter extends React.Component {
   interaction = () => {
     const {signatureImporter, network, inputs, outputs} = this.props;
     const keystore = signatureImporter.method;
-    const psbt = unsignedMultisigPSBT(network, inputs, outputs);
     const bip32Paths = inputs.map((input) => {
       if (typeof input.bip32Path === "undefined")
         return signatureImporter.bip32Path; // pubkey path
@@ -49,7 +48,6 @@ class IndirectHardwareWalletSignatureImporter extends React.Component {
       inputs,
       outputs,
       bip32Paths,
-      psbt,
     });
   };
 

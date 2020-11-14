@@ -12,7 +12,6 @@ import {
   unsignedMultisigTransaction,
 } from "unchained-bitcoin";
 import updateState from "./utils";
-
 import { SET_NETWORK, SET_ADDRESS_TYPE } from "../actions/settingsActions";
 import {
   CHOOSE_PERFORM_SPEND,
@@ -38,9 +37,7 @@ import {
   SET_SPEND_STEP,
   SPEND_STEP_CREATE,
 } from "../actions/transactionActions";
-
 import { RESET_NODES_SPEND } from "../actions/walletActions";
-import { unsignedMultisigPSBT } from 'unchained-bitcoin';
 
 function sortInputs(a, b) {
   const x = a.txid.toLowerCase();

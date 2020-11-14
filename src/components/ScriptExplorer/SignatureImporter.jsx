@@ -24,7 +24,6 @@ import {
 } from "@material-ui/core";
 import Copyable from "../Copyable";
 import TextSignatureImporter from "./TextSignatureImporter";
-import HermitSignatureImporter from "./HermitSignatureImporter";
 import DirectHardwareWalletSignatureImporter from "./DirectHardwareWalletSignatureImporter";
 import EditableName from "../EditableName";
 
@@ -120,7 +119,7 @@ class SignatureImporter extends React.Component {
               value={signatureImporter.method}
               onChange={this.handleMethodChange}
             >
-              <MenuItem value="">{"< Select method >"}</MenuItem>
+              <MenuItem value="unknown">{"< Select method >"}</MenuItem>
               <MenuItem value={TREZOR}>Trezor</MenuItem>
               <MenuItem value={LEDGER}>Ledger</MenuItem>
               <MenuItem value={COLDCARD}>Coldcard</MenuItem>
@@ -166,6 +165,7 @@ class SignatureImporter extends React.Component {
           outputs={outputs}
           inputsTotalSats={inputsTotalSats}
           fee={fee}
+          extendedPublicKeyImporter={extendedPublicKeyImporter}
           validateAndSetBIP32Path={this.validateAndSetBIP32Path}
           resetBIP32Path={this.resetBIP32Path}
           defaultBIP32Path={this.defaultBIP32Path()}
@@ -307,6 +307,14 @@ class SignatureImporter extends React.Component {
       return;
     }
 
+    if (inputsSignatures.length / 2 === inputs.length) {
+      //doubly signed psbt...
+      inputsSignatures = inputsSignatures.slice(inputsSignatures.length / 2);
+    }
+    console.log(inputsSignatures);
+
+    console.log(inputsSignatures.length);
+    console.log(inputs.length);
     if (inputsSignatures.length < inputs.length) {
       errback("Not enough signatures (must be exactly one for each input).");
       return;
