@@ -111,7 +111,7 @@ class IndirectDeviceExtendedPublicKeyImporter extends React.Component {
 
   render = () => {
     const { disableChangeMethod, extendedPublicKeyImporter } = this.props;
-    const { extendedPublicKeyError, status } = this.state;
+    const { extendedPublicKeyError } = this.state;
     const interaction = this.interaction();
     return (
       <FormGroup>

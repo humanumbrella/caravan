@@ -3,9 +3,8 @@ import PropTypes from "prop-types";
 import { connect } from "react-redux";
 import { debounce } from "lodash";
 import {
-  deriveMultisigByPath,
+  deriveMultisigByIndex,
   generateBraid,
-  ExtendedPublicKey,
 } from "unchained-bitcoin";
 import {
   Button,
@@ -25,23 +24,22 @@ import {
   getAddressStatus,
   fetchFeeEstimate,
 } from "../../blockchain";
-
-// Components
 import ClientPicker from "../ClientPicker";
 import ConfirmWallet from "./ConfirmWallet";
 import WalletControl from "./WalletControl";
 import WalletConfigInteractionButtons from "./WalletConfigInteractionButtons";
-
-// Actions
 import { setFrozen } from "../../actions/settingsActions";
 import {
   updateDepositSliceAction,
   updateChangeSliceAction,
   resetNodesFetchErrors as resetNodesFetchErrorsAction,
-  resetWallet as resetWalletAction,
+  resetWallet as resetWalletAction, initialLoadComplete as initialLoadCompleteAction,
 } from "../../actions/walletActions";
 import { fetchSliceData as fetchSliceDataAction } from "../../actions/braidActions";
-import { setExtendedPublicKeyImporterVisible } from "../../actions/extendedPublicKeyImporterActions";
+import {
+  generateRichExtendedPublicKeys,
+  setExtendedPublicKeyImporterVisible,
+} from "../../actions/extendedPublicKeyImporterActions";
 import { setIsWallet as setIsWalletAction } from "../../actions/transactionActions";
 import { wrappedActions } from "../../actions/utils";
 import {
@@ -49,7 +47,6 @@ import {
   SET_CLIENT_PASSWORD_ERROR,
 } from "../../actions/clientActions";
 import { MAX_FETCH_UTXOS_ERRORS, MAX_TRAILING_EMPTY_NODES } from "./constants";
-// import {bip32} from 'bitcoinjs-lib';
 
 class WalletGenerator extends React.Component {
   constructor(props) {
@@ -198,41 +195,23 @@ class WalletGenerator extends React.Component {
   generateMultisig = async (isChange, bip32Path, attemptToKeepGenerating) => {
     const {
       extendedPublicKeyImporters,
-      totalSigners,
       network,
       addressType,
       requiredSigners,
     } = this.props;
 
-    // Build a braid
-    const extendedPublicKeys = [];
-
-    for (let num=1; num<=totalSigners; num+=1) {
-      let extendedPublicKey = ExtendedPublicKey.fromBase58(extendedPublicKeyImporters[num].extendedPublicKey);
-
-      if (extendedPublicKeyImporters[num].rootXfp === 'Unknown') {
-        extendedPublicKey.setRootFingerprint('00000000');
-      } else {
-        extendedPublicKey.setRootFingerprint(extendedPublicKeyImporters[num].rootXfp);
-      }
-
-      if (extendedPublicKeyImporters[num].bip32Path === 'Unknown') {
-        extendedPublicKey.setBip32Path('m'+'/0'.repeat(extendedPublicKey.depth));
-      } else {
-        extendedPublicKey.setBip32Path(extendedPublicKeyImporters[num].bip32Path);
-      }
-      extendedPublicKeys.push(extendedPublicKey);
-    }
-
-    let braid = generateBraid(
+    const extendedPublicKeys = generateRichExtendedPublicKeys(extendedPublicKeyImporters);
+    const braid = generateBraid(
         network,
         addressType,
         extendedPublicKeys,
         requiredSigners,
-        bip32Path=bip32Path.slice(2),
+        isChange ? '1' : '0',
     );
 
-    const multisig = deriveMultisigByPath(braid, bip32Path);
+    const bip32Fragments = bip32Path.split("/");
+    const index = bip32Fragments[bip32Fragments.length-1];
+    const multisig = deriveMultisigByIndex(braid, index);
 
     const utxoUpdates = await this.fetchUTXOs(
       isChange,
@@ -263,7 +242,7 @@ class WalletGenerator extends React.Component {
   };
 
   generateNextNodeIfNecessary = (isChange) => {
-    const { change, deposits } = this.props;
+    const { change, deposits, initialLoadComplete } = this.props;
     const { trailingEmptyNodes } = isChange ? change : deposits;
     const { fetchUTXOsErrors } = isChange ? change : deposits;
     const allBIP32Paths = Object.keys((isChange ? change : deposits).nodes);
@@ -271,6 +250,7 @@ class WalletGenerator extends React.Component {
       trailingEmptyNodes >= MAX_TRAILING_EMPTY_NODES ||
       fetchUTXOsErrors >= MAX_FETCH_UTXOS_ERRORS
     ) {
+      initialLoadComplete();
       return;
     }
 
@@ -525,6 +505,7 @@ const mapDispatchToProps = {
     setPassword: SET_CLIENT_PASSWORD,
     setPasswordError: SET_CLIENT_PASSWORD_ERROR,
   }),
+  initialLoadComplete: initialLoadCompleteAction,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(WalletGenerator);

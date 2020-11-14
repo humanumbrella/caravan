@@ -4,12 +4,14 @@ import {
   Card,
   CardHeader,
   CardContent,
-  Button,
   ButtonGroup,
   Grid,
   makeStyles,
   Tooltip,
 } from "@material-ui/core";
+import MuiButton from "@material-ui/core/Button";
+import {withStyles} from '@material-ui/styles';
+
 import CircularProgress from "@material-ui/core/CircularProgress";
 import {
   RefreshOutlined,
@@ -36,6 +38,27 @@ const useStyles = makeStyles(() => ({
   },
 }));
 
+const Button = withStyles({
+  root: {
+    "&.Mui-disabled": {
+      pointerEvents: "auto"
+    }
+  }
+})(MuiButton);
+
+const ButtonWithTooltip = ({ tooltipText, disabled, onClick, ...other }) => {
+  const adjustedButtonProps = {
+    disabled: disabled,
+    component: disabled ? "div" : undefined,
+    onClick: disabled ? undefined : onClick
+  };
+  return (
+    <Tooltip title={tooltipText}>
+      <Button {...other} {...adjustedButtonProps} />
+    </Tooltip>
+  );
+};
+
 const WalletActionsPanel = ({
   addresses,
   client,
@@ -59,37 +82,34 @@ const WalletActionsPanel = ({
         <Grid container spacing={1} alignItems="center" justify="center">
           <Grid item xs={12}>
             <ButtonGroup variant="outlined">
-              <Tooltip title="Force a refresh for latest wallet state and balance.">
-                <Button
-                  onClick={handleRefresh}
-                  disabled={!walletActivated}
-                  startIcon={
-                    refreshing ? (
-                      <CircularProgress size={24} />
-                    ) : (
-                      <RefreshOutlined />
-                    )
-                  }
-                >
-                  Refresh
-                </Button>
-              </Tooltip>
-              <Tooltip title="Download wallet configuration to local machine for backup. No security is lost with this, but access to this file provides anyone who has it information about balances.">
-                <Button
-                  startIcon={<GetAppOutlined />}
-                  onClick={onDownloadConfig}
-                >
-                  Download Configuration
-                </Button>
-              </Tooltip>
-              <Tooltip title="Only clears the wallet config from browser sessions. Funds remain unaffected.">
-                <Button
-                  startIcon={<ExitToAppOutlined />}
-                  onClick={handleClearClick}
-                >
-                  Clear Wallet
-                </Button>
-              </Tooltip>
+              <ButtonWithTooltip
+                tooltipText="Force a refresh for latest wallet state and balance."
+                disabled={!walletActivated}
+                onClick={handleRefresh}
+                startIcon={
+                  refreshing ? (
+                    <CircularProgress size={24} />
+                  ) : (
+                    <RefreshOutlined />
+                  )
+                }
+              >
+                Refresh
+              </ButtonWithTooltip>
+              <ButtonWithTooltip
+                tooltipText="Download wallet configuration to local machine for backup. No security is lost with this, but access to this file provides anyone who has it information about balances."
+                onClick={onDownloadConfig}
+                startIcon={<GetAppOutlined />}
+              >
+                Download Configuration
+              </ButtonWithTooltip>
+              <ButtonWithTooltip
+                tooltipText="Only clears the wallet config from browser sessions. Funds remain unaffected."
+                startIcon={<ExitToAppOutlined />}
+                onClick={handleClearClick}
+              >
+                Clear Wallet
+              </ButtonWithTooltip>
             </ButtonGroup>
           </Grid>
           {client.type === "private" && (

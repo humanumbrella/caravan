@@ -150,10 +150,8 @@ class OutputEntry extends React.Component {
     ) {
       return true;
     }
-    if (amountError === "" && newAmount === new BigNumber(amount)) {
-      return true;
-    }
-    return false;
+    return amountError === "" && newAmount === new BigNumber(amount);
+
   };
 
   isBalanceable = () => !this.isNotBalanceable();

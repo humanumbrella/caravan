@@ -307,53 +307,92 @@ class SignatureImporter extends React.Component {
       return;
     }
 
-    if (inputsSignatures.length / 2 === inputs.length) {
-      //doubly signed psbt...
-      inputsSignatures = inputsSignatures.slice(inputsSignatures.length / 2);
-    }
-    console.log(inputsSignatures);
-
-    console.log(inputsSignatures.length);
-    console.log(inputs.length);
     if (inputsSignatures.length < inputs.length) {
       errback("Not enough signatures (must be exactly one for each input).");
       return;
     }
-    if (inputsSignatures.length > inputs.length) {
-      errback("Too many signatures (must be exactly one for each input).");
-      return;
+
+    if (inputsSignatures.length % inputs.length !== 0) {
+      errback("Not the right number of signatures (must be exactly one for each input).")
     }
 
+    const numSignatureSets = inputsSignatures.length / inputs.length;
+
     const publicKeys = [];
-    const finalizedSignatureImporters = Object.values(
-      signatureImporters
-    ).filter((signatureImporter) => signatureImporter.finalized);
-    for (
-      let inputIndex = 0;
-      inputIndex < inputsSignatures.length;
-      inputIndex += 1
-    ) {
-      const inputNumber = inputIndex + 1;
-      const inputSignature = inputsSignatures[inputIndex];
-      if (validateHex(inputSignature) !== "") {
-        errback(`Signature for input ${inputNumber} is not valid hex.`);
-        return;
+    if (numSignatureSets === 1) {
+      const finalizedSignatureImporters = Object.values(
+        signatureImporters
+      ).filter((signatureImporter) => signatureImporter.finalized);
+      for (
+        let inputIndex = 0;
+        inputIndex < inputsSignatures.length;
+        inputIndex += 1
+      ) {
+        const inputNumber = inputIndex + 1;
+        const inputSignature = inputsSignatures[inputIndex];
+        if (validateHex(inputSignature) !== "") {
+          errback(`Signature for input ${inputNumber} is not valid hex.`);
+          return;
+        }
+
+        let publicKey;
+        try {
+          publicKey = validateMultisigSignature(
+            network,
+            inputs,
+            outputs,
+            inputIndex,
+            inputSignature
+          );
+        } catch (e) {
+          errback(`Signature for input ${inputNumber} is invalid.`);
+          return;
+        }
+        if (publicKey) {
+          for (
+            let finalizedSignatureImporterNum = 0;
+            finalizedSignatureImporterNum < finalizedSignatureImporters.length;
+            finalizedSignatureImporterNum += 1
+          ) {
+            const finalizedSignatureImporter =
+              finalizedSignatureImporters[finalizedSignatureImporterNum];
+
+            if (
+              finalizedSignatureImporter.signature[inputIndex] ===
+              inputSignature ||
+              finalizedSignatureImporter.publicKeys[inputIndex] === publicKey
+            ) {
+              errback(
+                `Signature for input ${inputNumber} is a duplicate of a previously provided signature.`
+              );
+              return;
+            }
+          }
+          publicKeys.push(publicKey);
+        } else {
+          errback(`Signature for input ${inputNumber} is invalid.`);
+          return;
+        }
       }
 
-      let publicKey;
-      try {
-        publicKey = validateMultisigSignature(
-          network,
-          inputs,
-          outputs,
-          inputIndex,
-          inputSignature
-        );
-      } catch (e) {
-        errback(`Signature for input ${inputNumber} is invalid.`);
-        return;
-      }
-      if (publicKey) {
+      console.log(inputsSignatures);
+      console.log(publicKeys);
+      setComplete(number, {
+        signature: inputsSignatures,
+        publicKeys,
+        finalized: true,
+      });
+    } else {
+      console.log('multiple sig sets!');
+      const finalizedSignatureImporters = Object.values(
+        signatureImporters
+      ).filter((signatureImporter) => signatureImporter.finalized);
+      const knownSignatures = [];
+      for (
+        let inputIndex = 0;
+        inputIndex < inputs.length;
+        inputIndex += 1
+      ) {
         for (
           let finalizedSignatureImporterNum = 0;
           finalizedSignatureImporterNum < finalizedSignatureImporters.length;
@@ -362,29 +401,79 @@ class SignatureImporter extends React.Component {
           const finalizedSignatureImporter =
             finalizedSignatureImporters[finalizedSignatureImporterNum];
 
-          if (
-            finalizedSignatureImporter.signature[inputIndex] ===
-              inputSignature ||
-            finalizedSignatureImporter.publicKeys[inputIndex] === publicKey
-          ) {
-            errback(
-              `Signature for input ${inputNumber} is a duplicate of a previously provided signature.`
-            );
-            return;
-          }
+          knownSignatures.push(finalizedSignatureImporter.signature[inputIndex]);
         }
-        publicKeys.push(publicKey);
-      } else {
-        errback(`Signature for input ${inputNumber} is invalid.`);
-        return;
       }
+      // diff out any signature we've seen before
+      let signaturesToCheck = inputsSignatures.filter(x => !knownSignatures.includes(x));
+
+      for (
+        let inputIndex = 0;
+        inputIndex < signaturesToCheck.length;
+        inputIndex += 1
+      ) {
+        const inputNumber = inputIndex + 1;
+        const inputSignature = signaturesToCheck[inputIndex];
+        if (validateHex(inputSignature) !== "") {
+          errback(`Signature for input ${inputNumber} is not valid hex.`);
+          return;
+        }
+
+        let publicKey;
+        try {
+          publicKey = validateMultisigSignature(
+            network,
+            inputs,
+            outputs,
+            inputIndex,
+            inputSignature,
+          );
+        } catch (e) {
+          console.log(e);
+          // errback(`Signature for input ${inputNumber} is invalid.`);
+          // return;
+        }
+        // if (publicKey) {
+        //   for (
+        //     let finalizedSignatureImporterNum = 0;
+        //     finalizedSignatureImporterNum < finalizedSignatureImporters.length;
+        //     finalizedSignatureImporterNum += 1
+        //   ) {
+        //     const finalizedSignatureImporter =
+        //       finalizedSignatureImporters[finalizedSignatureImporterNum];
+        //
+        //     if (
+        //       finalizedSignatureImporter.signature[inputIndex] ===
+        //       inputSignature ||
+        //       finalizedSignatureImporter.publicKeys[inputIndex] === publicKey
+        //     ) {
+        //       duplicateSignatureCount += 1;
+        //       skipOverThisSignature = true;
+        //     }
+        //   }
+
+        console.log(publicKey);
+        console.log(inputSignature);
+        if (publicKey) {
+          publicKeys.push(publicKey);
+        }
+        // }
+        // else {
+        //   errback(`Signature for input ${inputNumber} is invalid.`);
+        //   return;
+        // }
+      }
+      console.log(publicKeys);
+      console.log(signaturesToCheck);
+
+      setComplete(number, {
+        signature: signaturesToCheck,
+        publicKeys,
+        finalized: true,
+      });
     }
 
-    setComplete(number, {
-      signature: inputsSignatures,
-      publicKeys,
-      finalized: true,
-    });
+
   };
 
   render() {

@@ -4,14 +4,10 @@ import { connect } from "react-redux";
 import { Tabs, Tab, Box, LinearProgress } from "@material-ui/core";
 import {
   setWalletModeAction as setWalletModeActionImport,
-  initialLoadComplete as initialLoadCompleteAction,
   WALLET_MODES,
 } from "../../actions/walletActions";
 import { setRequiredSigners as setRequiredSignersAction } from "../../actions/transactionActions";
 import { MAX_FETCH_UTXOS_ERRORS, MAX_TRAILING_EMPTY_NODES } from "./constants";
-
-// Components
-
 import WalletDeposit from "./WalletDeposit";
 import WalletSpend from "./WalletSpend";
 import { SlicesTableContainer } from "../Slices";
@@ -68,18 +64,12 @@ class WalletControl extends React.Component {
   };
 
   addressesAreLoaded = () => {
-    const { change, deposits, nodesLoaded, initialLoadComplete } = this.props;
+    const { change, deposits, nodesLoaded } = this.props;
     if (nodesLoaded) return true;
-    if (
-      (deposits.trailingEmptyNodes >= MAX_TRAILING_EMPTY_NODES ||
-        deposits.fetchUTXOsErrors >= MAX_FETCH_UTXOS_ERRORS) &&
+    return (deposits.trailingEmptyNodes >= MAX_TRAILING_EMPTY_NODES ||
+      deposits.fetchUTXOsErrors >= MAX_FETCH_UTXOS_ERRORS) &&
       (change.trailingEmptyNodes >= MAX_TRAILING_EMPTY_NODES ||
-        change.fetchUTXOsErrors >= MAX_FETCH_UTXOS_ERRORS)
-    ) {
-      initialLoadComplete();
-      return true;
-    }
-    return false;
+        change.fetchUTXOsErrors >= MAX_FETCH_UTXOS_ERRORS);
   };
 
   handleModeChange = (_event, mode) => {
@@ -109,7 +99,6 @@ WalletControl.propTypes = {
     trailingEmptyNodes: PropTypes.number,
     fetchUTXOsErrors: PropTypes.number,
   }).isRequired,
-  initialLoadComplete: PropTypes.func.isRequired,
   nodesLoaded: PropTypes.bool.isRequired,
   requiredSigners: PropTypes.number.isRequired,
   setMode: PropTypes.func.isRequired,
@@ -131,7 +120,6 @@ function mapStateToProps(state) {
 const mapDispatchToProps = {
   setMode: setWalletModeActionImport,
   setRequiredSigners: setRequiredSignersAction,
-  initialLoadComplete: initialLoadCompleteAction,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(WalletControl);
