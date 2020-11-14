@@ -41,7 +41,7 @@ class ColdcardFileReaderBase extends Component {
 
     if (status === PENDING) {
       return (
-        <div>
+        <Grid container direction="column">
           <p>When you are ready, upload the JSON file from your Coldcard:</p>
           <Box>
             <Dropzone
@@ -64,7 +64,7 @@ class ColdcardFileReaderBase extends Component {
               </div>
             )}
           </Box>
-        </div>
+        </Grid>
       );
     }
 

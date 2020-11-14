@@ -12,8 +12,7 @@ import {Button, FormGroup, FormHelperText, Grid, TextField} from "@material-ui/c
 import HermitReader from "../Hermit/HermitReader";
 import InteractionMessages from "../InteractionMessages";
 import { ColdcardJSONReader } from "../Coldcard";
-
-const DEFAULT_MULTISIG_BIP32_PATH = "m/45'/0/0";
+import {MAINNET} from 'unchained-bitcoin';
 
 class IndirectDeviceExtendedPublicKeyImporter extends React.Component {
 
@@ -23,15 +22,31 @@ class IndirectDeviceExtendedPublicKeyImporter extends React.Component {
       extendedPublicKeyError: "",
       bip32PathError: "",
       status: this.interaction().isSupported() ? PENDING : UNSUPPORTED,
+      COLDCARD_MULTISIG_BIP32_PATH: `m/45'/0/0`,
     };
   }
 
   componentDidMount = () => {
     const { extendedPublicKeyImporter, validateAndSetBIP32Path } = this.props;
+    const {COLDCARD_MULTISIG_BIP32_PATH} = this.state;
     if (extendedPublicKeyImporter.method === COLDCARD) {
-      validateAndSetBIP32Path(DEFAULT_MULTISIG_BIP32_PATH, () => {}, this.setBIP32PathError, {});
+      validateAndSetBIP32Path(COLDCARD_MULTISIG_BIP32_PATH, () => {}, this.setBIP32PathError, {});
     }
   };
+
+  componentDidUpdate(prevProps, prevState, snapshot) {
+    const { validateAndSetBIP32Path, network } = this.props;
+    const coinPath = (network === MAINNET ? "0" : "1");
+    const pathUpdate = `m/45'/${coinPath}/0`;
+    if (prevProps.network !== network) {
+      this.setState({COLDCARD_MULTISIG_BIP32_PATH: pathUpdate,})
+      validateAndSetBIP32Path(
+        pathUpdate,
+        () => {},
+        () => {}
+      );
+    }
+  }
 
   interaction = () => {
     const { network, extendedPublicKeyImporter } = this.props;
@@ -67,7 +82,7 @@ class IndirectDeviceExtendedPublicKeyImporter extends React.Component {
               type="button"
               variant="contained"
               size="small"
-              onClick={this.resetBIP32Path}
+              onClick={extendedPublicKeyImporter.method === COLDCARD ? this.resetColdcardBIP32Path : this.resetBIP32Path}
               disabled={status !== PENDING}
             >
               Default
@@ -152,16 +167,22 @@ class IndirectDeviceExtendedPublicKeyImporter extends React.Component {
 
   bip32PathIsDefault = (coldcard) => {
     const { extendedPublicKeyImporter, defaultBIP32Path } = this.props;
-    return coldcard ? extendedPublicKeyImporter.bip32Path === "m/45'/0/0" : extendedPublicKeyImporter.bip32Path === defaultBIP32Path;
+    const {COLDCARD_MULTISIG_BIP32_PATH} = this.state;
+    return coldcard ? extendedPublicKeyImporter.bip32Path === COLDCARD_MULTISIG_BIP32_PATH : extendedPublicKeyImporter.bip32Path === defaultBIP32Path;
   };
 
   resetBIP32Path = () => {
-    // const { resetBIP32Path } = this.props;
-    // this.setBIP32PathError("");
-    // resetBIP32Path();
+    const { resetBIP32Path } = this.props;
+    this.setBIP32PathError("");
+    resetBIP32Path();
+  };
+
+  resetColdcardBIP32Path = () => {
     const { validateAndSetBIP32Path } = this.props;
+    const {COLDCARD_MULTISIG_BIP32_PATH} = this.state;
+    this.setBIP32PathError("");
     validateAndSetBIP32Path(
-      DEFAULT_MULTISIG_BIP32_PATH,
+      COLDCARD_MULTISIG_BIP32_PATH,
       () => {},
       () => {}
     );
@@ -178,14 +199,19 @@ class IndirectDeviceExtendedPublicKeyImporter extends React.Component {
       enableChangeMethod,
     } = this.props;
     enableChangeMethod();
-    const { xpub, bip32Path } = this.interaction().parse(data);
-    validateAndSetBIP32Path(
-      bip32Path,
-      () => {
-        validateAndSetExtendedPublicKey(xpub, this.setError);
-      },
-      this.setError
-    );
+    try {
+      const { xpub, bip32Path } = this.interaction().parse(data);
+      validateAndSetBIP32Path(
+        bip32Path,
+        () => {
+          validateAndSetExtendedPublicKey(xpub, this.setError);
+        },
+        this.setError
+      );
+    } catch (e) {
+      this.setError(e.message);
+    }
+
   };
 
   onClear = () => {
