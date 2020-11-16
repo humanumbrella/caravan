@@ -215,6 +215,7 @@ class TransactionPreview extends React.Component {
 TransactionPreview.propTypes = {
   changeAddress: PropTypes.string.isRequired,
   changeNode: PropTypes.object.isRequired,
+  changeOutputIndex: PropTypes.number.isRequired,
   editTransaction: PropTypes.func.isRequired,
   fee: PropTypes.string.isRequired,
   feeRate: PropTypes.string.isRequired,
@@ -222,6 +223,7 @@ TransactionPreview.propTypes = {
   inputsTotalSats: PropTypes.shape({}).isRequired,
   outputs: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   handleSignTransaction: PropTypes.func.isRequired,
+  setChangeOutputMultisig: PropTypes.func.isRequired,
 };
 
 function mapStateToProps(state) {

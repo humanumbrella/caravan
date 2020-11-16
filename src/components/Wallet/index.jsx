@@ -1,24 +1,18 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { connect } from "react-redux";
+import {connect} from "react-redux";
+import {satoshisToBitcoins, validateBIP32Index, validateBIP32Path, validateExtendedPublicKey} from "unchained-bitcoin";
+import {Box, Button, FormHelperText, Grid} from "@material-ui/core";
+import {downloadFile} from "../../utils";
 import {
-  validateBIP32Index,
-  validateBIP32Path,
-  validateExtendedPublicKey,
-  satoshisToBitcoins,
-} from "unchained-bitcoin";
-import { Grid, Box, Button, FormHelperText } from "@material-ui/core";
-import { downloadFile } from "../../utils";
-import {
-  updateDepositSliceAction,
-  updateChangeSliceAction,
   resetWallet as resetWalletAction,
+  updateChangeSliceAction,
+  updateDepositSliceAction,
   updateWalletNameAction as updateWalletNameActionImport,
 } from "../../actions/walletActions";
-import { fetchSliceData as fetchSliceDataAction } from "../../actions/braidActions";
+import {fetchSliceData as fetchSliceDataAction} from "../../actions/braidActions";
 import walletSelectors from "../../selectors";
-import { CARAVAN_CONFIG } from "./constants";
-// Components
+import {CARAVAN_CONFIG} from "./constants";
 import WalletInfoCard from "./WalletInfoCard";
 import NetworkPicker from "../NetworkPicker";
 import QuorumPicker from "../QuorumPicker";
@@ -28,35 +22,26 @@ import StartingAddressIndexPicker from "../StartingAddressIndexPicker";
 import WalletGenerator from "./WalletGenerator";
 import ExtendedPublicKeyImporter from "./ExtendedPublicKeyImporter";
 import WalletActionsPanel from "./WalletActionsPanel";
+import {getUnknownAddresses, getUnknownAddressSlices} from "../../selectors/wallet";
 import {
-  getUnknownAddresses,
-  getUnknownAddressSlices,
-} from "../../selectors/wallet";
-// Actions
-import {
-  setTotalSigners as setTotalSignersAction,
-  setRequiredSigners as setRequiredSignersAction,
   setAddressType as setAddressTypeAction,
   setNetwork as setNetworkAction,
+  setRequiredSigners as setRequiredSignersAction,
   setStartingAddressIndex as setStartingAddressIndexAction,
+  setTotalSigners as setTotalSignersAction,
 } from "../../actions/settingsActions";
 import {
-  setExtendedPublicKeyImporterMethod as setExtendedPublicKeyImporterMethodAction,
+  setExtendedPublicKeyImporterBIP32Path as setExtendedPublicKeyImporterBIP32PathAction,
   setExtendedPublicKeyImporterExtendedPublicKey as setExtendedPublicKeyImporterExtendedPublicKeyAction,
   setExtendedPublicKeyImporterExtendedPublicKeyRootXfp as setExtendedPublicKeyImporterExtendedPublicKeyRootXfpAction,
-  setExtendedPublicKeyImporterBIP32Path as setExtendedPublicKeyImporterBIP32PathAction,
-  setExtendedPublicKeyImporterName as setExtendedPublicKeyImporterNameAction,
   setExtendedPublicKeyImporterFinalized as setExtendedPublicKeyImporterFinalizedAction,
+  setExtendedPublicKeyImporterMethod as setExtendedPublicKeyImporterMethodAction,
+  setExtendedPublicKeyImporterName as setExtendedPublicKeyImporterNameAction,
   setExtendedPublicKeyImporterVisible as setExtendedPublicKeyImporterVisibleAction,
 } from "../../actions/extendedPublicKeyImporterActions";
-import { wrappedActions } from "../../actions/utils";
-import {
-  SET_CLIENT_TYPE,
-  SET_CLIENT_URL,
-  SET_CLIENT_USERNAME,
-  SET_CLIENT_PASSWORD,
-} from "../../actions/clientActions";
-import { clientPropTypes, slicePropTypes } from "../../proptypes";
+import {wrappedActions} from "../../actions/utils";
+import {SET_CLIENT_PASSWORD, SET_CLIENT_TYPE, SET_CLIENT_URL, SET_CLIENT_USERNAME} from "../../actions/clientActions";
+import {clientPropTypes, slicePropTypes} from "../../proptypes";
 
 class CreateWallet extends React.Component {
   static validateProperties(config, properties, key) {
@@ -486,10 +471,9 @@ ${this.extendedPublicKeyImporterBIP32Paths()}
   totalBalance = () => {
     const { deposits, change } = this.props;
     if (!Object.keys(deposits.nodes).length) return "";
-    const btc = satoshisToBitcoins(
+    return satoshisToBitcoins(
       deposits.balanceSats.plus(change.balanceSats)
     ).toFixed();
-    return btc;
   };
 
   clearConfig = (e) => {
@@ -648,6 +632,7 @@ CreateWallet.propTypes = {
   setStartingAddressIndex: PropTypes.func.isRequired,
   setExtendedPublicKeyImporterMethod: PropTypes.func.isRequired,
   setExtendedPublicKeyImporterExtendedPublicKey: PropTypes.func.isRequired,
+  setExtendedPublicKeyImporterExtendedPublicKeyRootXfp: PropTypes.func.isRequired,
   setExtendedPublicKeyImporterBIP32Path: PropTypes.func.isRequired,
   setExtendedPublicKeyImporterFinalized: PropTypes.func.isRequired,
   setExtendedPublicKeyImporterName: PropTypes.func.isRequired,

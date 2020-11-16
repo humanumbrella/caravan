@@ -3,6 +3,8 @@ import {
   blockExplorerAddressURL,
   satoshisToBitcoins,
   unsignedMultisigTransaction,
+  unsignedMultisigPSBT,
+  unsignedTransactionObjectFromPSBT,
   TEST_FIXTURES,
 } from "unchained-bitcoin";
 import { SignMultisigTransaction } from "unchained-wallets";
@@ -85,11 +87,22 @@ class SignMultisigTransactionTest extends Test {
   }
 
   unsignedTransaction() {
-    return unsignedMultisigTransaction(
-      this.params.network,
-      this.params.inputs,
-      this.params.outputs
-    );
+    let unsignedTx;
+    try {
+      const unsignedTransactionPSBT = unsignedMultisigPSBT(
+        this.params.network,
+        this.params.inputs,
+        this.params.outputs,
+      )
+      unsignedTx = unsignedTransactionObjectFromPSBT(unsignedTransactionPSBT);
+    } catch(e) { // probably has an input that isn't braid aware.
+      unsignedTx = unsignedMultisigTransaction(
+        this.params.network,
+        this.params.inputs,
+        this.params.outputs
+      ); // bitcoinjs-lib will throw a Deprecation warning for using TransactionBuilder
+    }
+    return unsignedTx;
   }
 
   interaction() {

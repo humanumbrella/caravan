@@ -9,8 +9,9 @@ import {
   satoshisToBitcoins,
   bitcoinsToSatoshis,
   validateAddress,
+  unsignedMultisigTransaction,
   unsignedMultisigPSBT,
-  unsignedTransactionFromHex,
+  unsignedTransactionObjectFromPSBT,
 } from "unchained-bitcoin";
 import updateState from "./utils";
 import { SET_NETWORK, SET_ADDRESS_TYPE } from "../actions/settingsActions";
@@ -265,12 +266,21 @@ function finalizeOutputs(state, action) {
   //   state.inputs,
   //   state.outputs
   // );
-  const unsignedTransactionPSBT = unsignedMultisigPSBT(
-    state.network,
-    state.inputs,
-    state.outputs
-  )
-  const unsignedTransaction = unsignedTransactionFromHex(unsignedTransactionPSBT.txn);
+  let unsignedTransaction;
+  try {
+    const unsignedTransactionPSBT = unsignedMultisigPSBT(
+      state.network,
+      state.inputs,
+      state.outputs
+    )
+    unsignedTransaction = unsignedTransactionObjectFromPSBT(unsignedTransactionPSBT);
+  } catch (e) { // probably has an input that isn't braid aware.
+    unsignedTransaction = unsignedMultisigTransaction(
+      state.network,
+      state.inputs,
+      state.outputs
+    ); // bitcoinjs-lib will throw a Deprecation warning for using TransactionBuilder
+  }
   return {
     ...state,
     ...{ finalizedOutputs: action.value, unsignedTransaction },

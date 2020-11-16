@@ -129,23 +129,34 @@ npm module. Instructions to install and run the module are on its
 [home page](https://www.npmjs.com/package/corsproxy).
 
 Explicitly, install `corsproxy` with
->`$ npm install -g corsproxy`
+
+```
+$ npm install -g corsproxy
+```
 
 and then launch corsproxy
->`$ corsproxy`
 
-You should see
->`$ [log,info], data: CORS Proxy running at: http://localhost:1337`
+```
+$ corsproxy
+```
+You should see:
 
+```
+$ [log,info], data: CORS Proxy running at: http://localhost:1337
+...
+```
 If you are running a bitcoind node on the same machine as Caravan,
 on port 8332, and you run `corsproxy` with the default settings,
 you should be able to point Caravan at 'http://localhost:1337/localhost:8332'
 to communicate with your node. A testnet node would be running on a
-different port, for example: `http://localhost:1337/localhost:18332`.
+different port, for example: `http://localhost:1337/localhost:18332`, and you
+would need to point Caravan to that URL instead.
 
-Finally, a testnet node running on a different machine but still on the same
-network might be accessible via `http://localhost:1337/192.168.0.22:18332`, but
-you need to make sure the ports are open and accessible.
+Finally, a testnet/regtest node running on a different machine but still on the same
+network might be accessible to you via `http://localhost:1337/192.168.0.22:18332`, but
+you need to make sure the ports are open and accessible. It should be clear at this
+point that if corsproxy is running, paste your node's IP:port on the end of the
+`corsproxy` URL: `http://localhost:1337/`
 
 ## Contributing
 

@@ -47,11 +47,11 @@ export function generateRichExtendedPublicKeys(extendedPublicKeyImporters) {
   return Object.values(extendedPublicKeyImporters).map((importer) => {
     let extendedPublicKey =  ExtendedPublicKey.fromBase58(importer.extendedPublicKey);
     extendedPublicKey.setRootFingerprint(
-      importer.rootXfp !== 'Unknown'
+      importer.rootXfp && importer.rootXfp.toLowerCase() !== 'unknown'
         ? importer.rootXfp
         : '00000000');
     extendedPublicKey.setBip32Path(
-      importer.bip32Path !== 'Unknown'
+      importer.bip32Path && importer.bip32Path.toLowerCase() !== 'unknown'
         ? importer.bip32Path
         : 'm'+'/0'.repeat(extendedPublicKey.depth));
     return extendedPublicKey;

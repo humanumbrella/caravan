@@ -418,10 +418,10 @@ class WalletGenerator extends React.Component {
               variant="contained"
               color="primary"
               onClick={this.generate}
-              // disabled={
-              //   (client.type === "private" && !connectSuccess) ||
-              //   client.type === "unknown"
-              // }
+              disabled={
+                (client.type === "private" && !connectSuccess) ||
+                client.type === "unknown"
+              }
             >
               Confirm
             </Button>
@@ -443,43 +443,44 @@ class WalletGenerator extends React.Component {
 }
 
 WalletGenerator.propTypes = {
-  network: PropTypes.string.isRequired,
   addressType: PropTypes.string.isRequired,
-  startingAddressIndex: PropTypes.number.isRequired,
+  change: PropTypes.shape({
+    nodes: PropTypes.shape({}),
+    fetchUTXOsErrors: PropTypes.number,
+  }).isRequired,
   client: PropTypes.shape({
     password: PropTypes.string,
     passwordError: PropTypes.string,
     type: PropTypes.string,
     username: PropTypes.string,
   }).isRequired,
-  change: PropTypes.shape({
-    nodes: PropTypes.shape({}),
-    fetchUTXOsErrors: PropTypes.number,
+  common: PropTypes.shape({
+    nodesLoaded: PropTypes.bool,
   }).isRequired,
+  configuring: PropTypes.bool.isRequired,
   deposits: PropTypes.shape({
     nodes: PropTypes.shape({}),
     fetchUTXOsErrors: PropTypes.number,
   }).isRequired,
-  configuring: PropTypes.bool.isRequired,
-  common: PropTypes.shape({
-    nodesLoaded: PropTypes.bool,
-  }).isRequired,
   downloadWalletDetails: PropTypes.func.isRequired,
   extendedPublicKeyImporters: PropTypes.shape({}).isRequired,
-  setGenerating: PropTypes.func.isRequired,
-  generating: PropTypes.bool.isRequired,
-  totalSigners: PropTypes.number.isRequired,
-  requiredSigners: PropTypes.number.isRequired,
   freeze: PropTypes.func.isRequired,
-  updateDepositSlice: PropTypes.func.isRequired,
-  updateChangeSlice: PropTypes.func.isRequired,
+  generating: PropTypes.bool.isRequired,
+  initialLoadComplete: PropTypes.func.isRequired,
+  network: PropTypes.string.isRequired,
+  setGenerating: PropTypes.func.isRequired,
+  startingAddressIndex: PropTypes.number.isRequired,
   refreshNodes: PropTypes.func.isRequired,
+  requiredSigners: PropTypes.number.isRequired,
   resetNodesFetchErrors: PropTypes.func.isRequired,
   resetWallet: PropTypes.func.isRequired,
   setImportersVisible: PropTypes.func.isRequired,
   setIsWallet: PropTypes.func.isRequired,
   setPassword: PropTypes.func.isRequired,
   setPasswordError: PropTypes.func.isRequired,
+  totalSigners: PropTypes.number.isRequired,
+  updateChangeSlice: PropTypes.func.isRequired,
+  updateDepositSlice: PropTypes.func.isRequired,
 };
 
 function mapStateToProps(state) {
