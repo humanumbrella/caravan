@@ -9,7 +9,8 @@ import {
   satoshisToBitcoins,
   bitcoinsToSatoshis,
   validateAddress,
-  unsignedMultisigTransaction,
+  unsignedMultisigPSBT,
+  unsignedTransactionFromHex,
 } from "unchained-bitcoin";
 import updateState from "./utils";
 import { SET_NETWORK, SET_ADDRESS_TYPE } from "../actions/settingsActions";
@@ -30,6 +31,7 @@ import {
   RESET_TRANSACTION,
   SET_IS_WALLET,
   SET_CHANGE_OUTPUT_INDEX,
+  SET_CHANGE_OUTPUT_MULTISIG,
   UPDATE_AUTO_SPEND,
   SET_SIGNING_KEY,
   SET_CHANGE_ADDRESS,
@@ -226,6 +228,15 @@ function updateOutputAddress(state, action) {
   };
 }
 
+function updateOutputMultisig(state, action) {
+  const newOutputs = [...state.outputs];
+  newOutputs[action.number - 1].multisig = action.value;
+  return {
+    ...state,
+    ...{ outputs: newOutputs },
+  };
+}
+
 function updateOutputAmount(state, action) {
   const newOutputs = [...state.outputs];
   let amount = action.value;
@@ -249,11 +260,17 @@ function updateOutputAmount(state, action) {
 }
 
 function finalizeOutputs(state, action) {
-  const unsignedTransaction = unsignedMultisigTransaction(
+  // const unsignedTransaction = unsignedMultisigTransaction(
+  //   state.network,
+  //   state.inputs,
+  //   state.outputs
+  // );
+  const unsignedTransactionPSBT = unsignedMultisigPSBT(
     state.network,
     state.inputs,
     state.outputs
-  );
+  )
+  const unsignedTransaction = unsignedTransactionFromHex(unsignedTransactionPSBT.txn);
   return {
     ...state,
     ...{ finalizedOutputs: action.value, unsignedTransaction },
@@ -366,6 +383,8 @@ export default (state = initialState(), action) => {
       return validateTransaction(addOutput(state, action));
     case SET_CHANGE_OUTPUT_INDEX:
       return updateState(state, { changeOutputIndex: action.value });
+    case SET_CHANGE_OUTPUT_MULTISIG:
+      return updateOutputMultisig(state, action);
     case SET_OUTPUT_ADDRESS:
       return validateTransaction(updateOutputAddress(state, action));
     case SET_OUTPUT_AMOUNT:
