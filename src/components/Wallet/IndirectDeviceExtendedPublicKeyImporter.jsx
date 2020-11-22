@@ -18,11 +18,13 @@ class IndirectDeviceExtendedPublicKeyImporter extends React.Component {
 
   constructor(props) {
     super(props);
+    const { network } = props;
+    const coinPath = (network === MAINNET ? "0" : "1");
     this.state = {
       extendedPublicKeyError: "",
       bip32PathError: "",
       status: this.interaction().isSupported() ? PENDING : UNSUPPORTED,
-      COLDCARD_MULTISIG_BIP32_PATH: `m/45'/0/0`,
+      COLDCARD_MULTISIG_BIP32_PATH: `m/45'/${coinPath}/0`,
     };
   }
 
