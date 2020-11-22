@@ -48,6 +48,8 @@ import {
 } from "../../actions/clientActions";
 import { MAX_FETCH_UTXOS_ERRORS, MAX_TRAILING_EMPTY_NODES } from "./constants";
 
+// const bitcoin = require('bitcoinjs-lib');
+
 class WalletGenerator extends React.Component {
   constructor(props) {
     super(props);
@@ -210,6 +212,12 @@ class WalletGenerator extends React.Component {
         chroot,
     );
     const multisig = deriveMultisigByPath(braid, bip32Path);
+
+    // FIXME: Add regtest option for private node, if you're on regtest have to change the prefix for p2wsh addresses.
+    // if (true) {
+    //   const multisigAddress = bitcoin.address.fromBech32(multisig.address);
+    //   multisig.address = bitcoin.address.toBech32(multisigAddress.data, multisigAddress.version, 'bcrt');
+    // }
     const utxoUpdates = await this.fetchUTXOs(
       isChange,
       multisig,
