@@ -34,7 +34,7 @@ const initialExtendedPublicKeyImporterState = (name = "") => ({
   extendedPublicKey: "",
   rootXfp: "",
   finalized: false,
-  confliect: false,
+  conflict: false,
 });
 
 function createInitialState() {

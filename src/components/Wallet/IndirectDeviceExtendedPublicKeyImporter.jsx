@@ -197,11 +197,13 @@ class IndirectDeviceExtendedPublicKeyImporter extends React.Component {
     const {
       validateAndSetBIP32Path,
       validateAndSetExtendedPublicKey,
+      validateAndSetRootFingerprint,
       enableChangeMethod,
     } = this.props;
     enableChangeMethod();
     try {
-      const { xpub, bip32Path } = this.interaction().parse(data);
+      const { xpub, bip32Path, rootFingerprint } = this.interaction().parse(data);
+      validateAndSetRootFingerprint(rootFingerprint, this.setError);
       validateAndSetBIP32Path(
         bip32Path,
         () => {
@@ -236,6 +238,7 @@ IndirectDeviceExtendedPublicKeyImporter.propTypes = {
   resetBIP32Path: PropTypes.func.isRequired,
   validateAndSetBIP32Path: PropTypes.func.isRequired,
   validateAndSetExtendedPublicKey: PropTypes.func.isRequired,
+  validateAndSetRootFingerprint: PropTypes.func.isRequired,
 };
 
 export default IndirectDeviceExtendedPublicKeyImporter;

@@ -109,6 +109,7 @@ class DirectDeviceExtendedPublicKeyImporter extends React.Component {
   import = async () => {
     const {
       validateAndSetExtendedPublicKey,
+      validateAndSetRootFingerprint,
       enableChangeMethod,
       disableChangeMethod,
     } = this.props;
@@ -117,6 +118,9 @@ class DirectDeviceExtendedPublicKeyImporter extends React.Component {
     try {
       const result = await this.interaction().run();
       const extendedPublicKey = result.xpub;
+      validateAndSetRootFingerprint(result.rootFingerprint, (error) => {
+        this.setState({ extendedPublicKeyError: error, status: PENDING });
+      });
       validateAndSetExtendedPublicKey(extendedPublicKey, (error) => {
         this.setState({ extendedPublicKeyError: error, status: PENDING });
       });
@@ -183,6 +187,7 @@ DirectDeviceExtendedPublicKeyImporter.propTypes = {
   }).isRequired,
   validateAndSetExtendedPublicKey: PropTypes.func.isRequired,
   validateAndSetBIP32Path: PropTypes.func.isRequired,
+  validateAndSetRootFingerprint: PropTypes.func.isRequired,
   defaultBIP32Path: PropTypes.string.isRequired,
   resetBIP32Path: PropTypes.func.isRequired,
   enableChangeMethod: PropTypes.func.isRequired,

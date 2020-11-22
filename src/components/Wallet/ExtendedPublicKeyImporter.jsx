@@ -3,6 +3,7 @@ import PropTypes from "prop-types";
 import { connect } from "react-redux";
 import {
   validateBIP32Path,
+  validateRootFingerprint,
   convertExtendedPublicKey,
   validateExtendedPublicKey,
   NETWORKS,
@@ -22,7 +23,6 @@ import {
   withStyles,
 } from "@material-ui/core";
 import Copyable from "../Copyable";
-import ExtendedPublicKeyExtendedPublicKeyImporter from "./ExtendedPublicKeyExtendedPublicKeyImporter";
 import TextExtendedPublicKeyImporter from "./TextExtendedPublicKeyImporter";
 import IndirectDeviceExtendedPublicKeyImporter from "./IndirectDeviceExtendedPublicKeyImporter";
 import DirectDeviceExtendedPublicKeyImporter from "./DirectDeviceExtendedPublicKeyImporter";
@@ -89,7 +89,6 @@ class ExtendedPublicKeyImporter extends React.Component {
             <MenuItem value={COLDCARD}>Coldcard</MenuItem>
             <MenuItem value={LEDGER}>Ledger</MenuItem>
             <MenuItem value={HERMIT}>Hermit</MenuItem>
-            <MenuItem value={XPUB}>Derive from extended public key</MenuItem>
             <MenuItem value={TEXT}>Enter as text</MenuItem>
           </Select>
         </FormControl>
@@ -101,7 +100,6 @@ class ExtendedPublicKeyImporter extends React.Component {
 
   renderImportByMethod = () => {
     const {
-      extendedPublicKeyImporters,
       extendedPublicKeyImporter,
       network,
       addressType,
@@ -116,6 +114,7 @@ class ExtendedPublicKeyImporter extends React.Component {
           extendedPublicKeyImporter={extendedPublicKeyImporter}
           validateAndSetExtendedPublicKey={this.validateAndSetExtendedPublicKey}
           validateAndSetBIP32Path={this.validateAndSetBIP32Path}
+          validateAndSetRootFingerprint={this.validateAndSetRootFingerprint}
           resetBIP32Path={this.resetBIP32Path}
           enableChangeMethod={this.enableChangeMethod}
           disableChangeMethod={this.disableChangeMethod}
@@ -134,6 +133,7 @@ class ExtendedPublicKeyImporter extends React.Component {
           extendedPublicKeyImporter={extendedPublicKeyImporter}
           validateAndSetExtendedPublicKey={this.validateAndSetExtendedPublicKey}
           validateAndSetBIP32Path={this.validateAndSetBIP32Path}
+          validateAndSetRootFingerprint={this.validateAndSetRootFingerprint}
           enableChangeMethod={this.enableChangeMethod}
           disableChangeMethod={this.disableChangeMethod}
           addressType={addressType}
@@ -141,17 +141,6 @@ class ExtendedPublicKeyImporter extends React.Component {
           network={network}
           resetBIP32Path={this.resetBIP32Path}
           reset={this.reset}
-        />
-      );
-    }
-    if (extendedPublicKeyImporter.method === XPUB) {
-      return (
-        <ExtendedPublicKeyExtendedPublicKeyImporter
-          extendedPublicKeyImporter={extendedPublicKeyImporter}
-          extendedPublicKeyImporters={extendedPublicKeyImporters}
-          validateAndSetExtendedPublicKey={this.validateAndSetExtendedPublicKey}
-          network={network}
-          validateAndSetBIP32Path={this.validateAndSetBIP32Path}
         />
       );
     }
@@ -349,6 +338,16 @@ class ExtendedPublicKeyImporter extends React.Component {
       if (callback) {
         callback();
       }
+    }
+  };
+
+  validateAndSetRootFingerprint = (rootFingerprint, errback) => {
+    const { number, setExtendedPublicKeyRootXfp } = this.props;
+    const error = validateRootFingerprint(rootFingerprint);
+    if (error) {
+      errback(error);
+    } else {
+      setExtendedPublicKeyRootXfp(number, rootFingerprint);
     }
   };
 
