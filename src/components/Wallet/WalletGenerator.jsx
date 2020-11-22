@@ -3,7 +3,7 @@ import PropTypes from "prop-types";
 import { connect } from "react-redux";
 import { debounce } from "lodash";
 import {
-  deriveMultisigByIndex,
+  deriveMultisigByPath,
   generateBraid,
 } from "unchained-bitcoin";
 import {
@@ -201,18 +201,15 @@ class WalletGenerator extends React.Component {
     } = this.props;
 
     const extendedPublicKeys = generateRichExtendedPublicKeys(extendedPublicKeyImporters);
+    const chroot = isChange ? '1' : '0';
     const braid = generateBraid(
         network,
         addressType,
         extendedPublicKeys,
         requiredSigners,
-        isChange ? '1' : '0',
+        chroot,
     );
-
-    const bip32Fragments = bip32Path.split("/");
-    const index = bip32Fragments[bip32Fragments.length-1];
-    const multisig = deriveMultisigByIndex(braid, index);
-
+    const multisig = deriveMultisigByPath(braid, bip32Path);
     const utxoUpdates = await this.fetchUTXOs(
       isChange,
       multisig,

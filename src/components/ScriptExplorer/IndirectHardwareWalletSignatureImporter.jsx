@@ -81,7 +81,7 @@ class IndirectHardwareWalletSignatureImporter extends React.Component {
     body = interaction.adapt();
     if (!body) {
       this.errorMessage =
-        "Product is not Coldcard ready. Please perform keychecks on each key to make sure root fingerprints are available.";
+        "Product is not Coldcard ready. Some keys are missing fingerprints.";
       return;
     }
     const filename = `wc-${walletConfig.name}.txt`;

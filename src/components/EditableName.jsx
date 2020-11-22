@@ -33,6 +33,10 @@ class EditableName extends React.Component {
               label="Name"
               value={newName}
               onChange={this.handleChange}
+              onFocus={event => {
+                setTimeout(event.target.select.bind(event.target), 20);
+              }}
+              onKeyDown={(e) => e.key === "Enter" ? this.submit() : null}
               error={this.hasError()}
               helperText={error}
             />

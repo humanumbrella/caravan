@@ -54,6 +54,7 @@ export function generateRichExtendedPublicKeys(extendedPublicKeyImporters) {
       importer.bip32Path && importer.bip32Path.toLowerCase() !== 'unknown'
         ? importer.bip32Path
         : 'm'+'/0'.repeat(extendedPublicKey.depth));
+    extendedPublicKey.addBase58String();
     return extendedPublicKey;
   })
 }
