@@ -6,6 +6,7 @@ import {
   TREZOR,
   LEDGER,
   HERMIT,
+  COLDCARD,
   PENDING,
   ACTIVE,
   GetMetadata,
@@ -83,6 +84,7 @@ class KeystorePickerBase extends React.Component {
                 <MenuItem value="">{"< Select type >"}</MenuItem>
                 <MenuItem value={TREZOR}>Trezor</MenuItem>
                 <MenuItem value={LEDGER}>Ledger</MenuItem>
+                <MenuItem value={COLDCARD}>Coldcard</MenuItem>
                 <MenuItem value={HERMIT}>Hermit</MenuItem>
               </Select>
             </FormControl>
@@ -101,7 +103,7 @@ class KeystorePickerBase extends React.Component {
 
           <Grid item md={2}>
             <Button
-              disabled={status === ACTIVE || type === "" || type === HERMIT}
+              disabled={status === ACTIVE || type === "" || type === HERMIT || type === COLDCARD}
               onClick={this.detectVersion}
             >
               {status === ACTIVE ? "Detecting..." : "Detect"}
@@ -109,7 +111,7 @@ class KeystorePickerBase extends React.Component {
           </Grid>
         </Grid>
 
-        {type && type !== HERMIT && (
+        {type && type !== HERMIT && type !== COLDCARD && (
           <InteractionMessages
             messages={this.interaction().messagesFor({ state: status })}
           />

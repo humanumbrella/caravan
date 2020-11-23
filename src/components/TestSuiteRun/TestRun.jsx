@@ -2,7 +2,7 @@ import React from "react";
 import { connect } from "react-redux";
 import PropTypes from "prop-types";
 
-import { PENDING, ACTIVE, HERMIT } from "unchained-wallets";
+import { PENDING, ACTIVE, HERMIT, COLDCARD } from "unchained-wallets";
 import {
   Box,
   Typography,
@@ -26,8 +26,12 @@ import * as errorNotificationActions from "../../actions/errorNotificationAction
 import InteractionMessages from "../InteractionMessages";
 import { TestRunNote } from "./Note";
 import { HermitReader, HermitDisplayer } from "../Hermit";
+import { ColdcardJSONReader, ColdcardPSBTReader } from "../Coldcard";
 
 import "./TestRun.css";
+import {ColdcardSigningButtons} from '../Coldcard';
+import moment from 'moment';
+import {downloadFile} from '../../utils';
 
 const SPACEBAR_CODE = 32;
 
@@ -59,6 +63,16 @@ class TestRunBase extends React.Component {
     }
   };
 
+  handleDownloadPSBTClick = () => {
+    const {test} = this.props;
+    const interaction = test.interaction();
+    const nameBits = test.name().split(" ");
+    let body = interaction.request().toBase64();
+    const timestamp = moment().format("HHmm");
+    const filename = `${timestamp}-${nameBits[2]}-${nameBits[1][0]}.psbt`;
+    downloadFile(body, filename);
+  };
+
   render = () => {
     const { test, testRunIndex, status, keystore } = this.props;
     if (!test) {
@@ -77,6 +91,34 @@ class TestRunBase extends React.Component {
           />
           <CardContent>
             {test.description()}
+            {keystore.type === COLDCARD && !test.unsignedTransaction && (
+              <Box align="center">
+                <ColdcardJSONReader
+                  interaction={test.interaction()}
+                  onSuccess={this.resolve}
+                  onStart={this.start}
+                  setError={test.resolve}
+                  fileType="JSON"
+                  validFileFormats=".json"
+                />
+              </Box>
+            )}
+            {keystore.type === COLDCARD && test.unsignedTransaction && (
+              <Box align="center">
+                <ColdcardSigningButtons
+                  handlePSBTDownloadClick={this.handleDownloadPSBTClick}
+                  handleWalletConfigDownloadClick={()=>'hi'}
+                />
+                <ColdcardPSBTReader
+                  interaction={test.interaction()}
+                  onSuccess={this.resolve}
+                  onStart={this.start}
+                  setError={test.resolve}
+                  fileType="PSBT"
+                  validFileFormats=".psbt"
+                />
+              </Box>
+            )}
             {this.renderInteractionMessages()}
             {keystore.type === HERMIT &&
               test.interaction().displayer &&
@@ -88,7 +130,7 @@ class TestRunBase extends React.Component {
                   />
                 </Box>
               )}
-            {status === PENDING && keystore.type !== HERMIT && (
+            {status === PENDING && keystore.type !== HERMIT && keystore.type !== COLDCARD && (
               <Box align="center">
                 <Button
                   variant="contained"

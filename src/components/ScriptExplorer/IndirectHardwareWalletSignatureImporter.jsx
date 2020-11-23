@@ -17,7 +17,7 @@ import {
 import {HermitReader} from "../Hermit";
 import {HermitDisplayer} from "../Hermit";
 import InteractionMessages from "../InteractionMessages";
-import {ColdcardPSBTReader} from '../Coldcard';
+import {ColdcardPSBTReader, ColdcardSigningButtons} from '../Coldcard';
 import {satoshisToBitcoins} from 'unchained-bitcoin';
 import {downloadFile} from '../../utils';
 import {connect} from 'react-redux';
@@ -68,7 +68,6 @@ class IndirectHardwareWalletSignatureImporter extends React.Component {
 
   // This tries to reshape it to a Coldcard Wallet Config via unchained-wallets
   reshapeConfig = (walletDetails) => {
-    let body = "";
     const walletConfig = JSON.parse(walletDetails);
     const startingAddressIndex = walletConfig.startingAddressIndex;
     walletConfig.name =
@@ -78,7 +77,7 @@ class IndirectHardwareWalletSignatureImporter extends React.Component {
 
     let interaction = ConfigAdapter({KEYSTORE: COLDCARD, jsonConfig: walletConfig});
     // So an error will be thrown if the config file doesn't have all the necessary pieces... ^
-    body = interaction.adapt();
+    let body = interaction.adapt();
     if (!body) {
       this.errorMessage =
         "Product is not Coldcard ready. Some keys are missing fingerprints.";
@@ -216,21 +215,10 @@ class IndirectHardwareWalletSignatureImporter extends React.Component {
             ) : // COLDCARD
             <div>
               {this.renderDeviceConfirmInfo()}
-              <Button
-                type="button"
-                variant="contained"
-                color="primary"
-                onClick={this.handlePSBTDownloadClick}
-              >
-                Download PSBT
-              </Button>
-              <Button
-                type="button"
-                variant="contained"
-                onClick={this.handleWalletConfigDownloadClick}
-              >
-                Download Coldcard Config
-              </Button>
+              <ColdcardSigningButtons
+                handlePSBTDownloadClick={this.handlePSBTDownloadClick}
+                handleWalletConfigDownloadClick={this.handleWalletConfigDownloadClick}
+              />
               <ColdcardPSBTReader
                 interaction={interaction}
                 onStart={disableChangeMethod}

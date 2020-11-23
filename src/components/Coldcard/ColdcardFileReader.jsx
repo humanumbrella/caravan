@@ -8,7 +8,7 @@ import styles from "./ColdcardFileReader.module.scss";
 class ColdcardFileReaderBase extends Component {
   static propTypes = {
     onSuccess: PropTypes.func.isRequired,
-    setError: PropTypes.func.isRequired,
+    setError: PropTypes.func,
     interaction: PropTypes.shape({
       messagesFor: PropTypes.func,
       parse: PropTypes.func,

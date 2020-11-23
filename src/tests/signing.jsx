@@ -10,12 +10,17 @@ import {
 import { SignMultisigTransaction } from "unchained-wallets";
 import { Box, Table, TableBody, TableRow, TableCell } from "@material-ui/core";
 import { externalLink } from "../utils";
-
 import Test from "./Test";
+import {parseSignaturesFromPSBT} from 'unchained-bitcoin/src';
 
 class SignMultisigTransactionTest extends Test {
   // eslint-disable-next-line class-methods-use-this
   postprocess(result) {
+    // PSBT
+    if (result.startsWith && (result.startsWith('cHNidP') || result.startsWith('70736274ff'))) {
+      return Object.values(parseSignaturesFromPSBT(result))[0];
+    }
+
     return result.signatures ? result.signatures : result;
   }
 
