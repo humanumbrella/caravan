@@ -1,5 +1,5 @@
 import { wrappedNumberedActions } from "./utils";
-import { ExtendedPublicKey } from 'unchained-bitcoin';
+import { ExtendedPublicKey } from "unchained-bitcoin";
 
 export const SET_EXTENDED_PUBLIC_KEY_IMPORTER_NAME =
   "SET_EXTENDED_PUBLIC_KEY_IMPORTER_NAME";
@@ -12,7 +12,7 @@ export const SET_EXTENDED_PUBLIC_KEY_IMPORTER_METHOD =
 export const SET_EXTENDED_PUBLIC_KEY_IMPORTER_EXTENDED_PUBLIC_KEY =
   "SET_EXTENDED_PUBLIC_KEY_IMPORTER_EXTENDED_PUBLIC_KEY";
 export const SET_EXTENDED_PUBLIC_KEY_IMPORTER_EXTENDED_PUBLIC_KEY_ROOT_FINGERPRINT =
-  "SET_EXTENDED_PUBLIC_KEY_IMPORTER_EXTENDED_PUBLIC_KEY_ROOT_XFP";
+  "SET_EXTENDED_PUBLIC_KEY_IMPORTER_EXTENDED_PUBLIC_KEY_ROOT_FINGERPRINT";
 export const SET_EXTENDED_PUBLIC_KEY_IMPORTER_FINALIZED =
   "SET_EXTENDED_PUBLIC_KEY_IMPORTER_FINALIZED";
 export const SET_EXTENDED_PUBLIC_KEY_IMPORTER_VISIBLE =
@@ -45,16 +45,20 @@ export function setExtendedPublicKeyImporterVisible(value) {
 
 export function generateRichExtendedPublicKeys(extendedPublicKeyImporters) {
   return Object.values(extendedPublicKeyImporters).map((importer) => {
-    let extendedPublicKey =  ExtendedPublicKey.fromBase58(importer.extendedPublicKey);
+    let extendedPublicKey = ExtendedPublicKey.fromBase58(
+      importer.extendedPublicKey
+    );
     extendedPublicKey.setRootFingerprint(
-      importer.rootXfp && importer.rootXfp.toLowerCase() !== 'unknown'
+      importer.rootXfp && importer.rootXfp.toLowerCase() !== "unknown"
         ? importer.rootXfp
-        : '00000000');
+        : "00000000"
+    );
     extendedPublicKey.setBip32Path(
-      importer.bip32Path && importer.bip32Path.toLowerCase() !== 'unknown'
+      importer.bip32Path && importer.bip32Path.toLowerCase() !== "unknown"
         ? importer.bip32Path
-        : 'm'+'/0'.repeat(extendedPublicKey.depth));
+        : "m" + "/0".repeat(extendedPublicKey.depth)
+    );
     extendedPublicKey.addBase58String();
     return extendedPublicKey;
-  })
+  });
 }
