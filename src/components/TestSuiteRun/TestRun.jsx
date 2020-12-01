@@ -2,7 +2,13 @@ import React from "react";
 import { connect } from "react-redux";
 import PropTypes from "prop-types";
 
-import { PENDING, ACTIVE, HERMIT, COLDCARD } from "unchained-wallets";
+import {
+  PENDING,
+  ACTIVE,
+  HERMIT,
+  COLDCARD,
+  INDIRECT_KEYSTORES,
+} from "unchained-wallets";
 import {
   Box,
   Typography,
@@ -29,9 +35,9 @@ import { HermitReader, HermitDisplayer } from "../Hermit";
 import { ColdcardJSONReader, ColdcardPSBTReader } from "../Coldcard";
 
 import "./TestRun.css";
-import {ColdcardSigningButtons} from '../Coldcard';
-import moment from 'moment';
-import {downloadFile} from '../../utils';
+import { ColdcardSigningButtons } from "../Coldcard";
+import moment from "moment";
+import { downloadFile } from "../../utils";
 
 const SPACEBAR_CODE = 32;
 
@@ -64,12 +70,20 @@ class TestRunBase extends React.Component {
   };
 
   handleDownloadPSBTClick = () => {
-    const {test} = this.props;
+    const { test } = this.props;
     const interaction = test.interaction();
     const nameBits = test.name().split(" ");
     let body = interaction.request().toBase64();
     const timestamp = moment().format("HHmm");
     const filename = `${timestamp}-${nameBits[2]}-${nameBits[1][0]}.psbt`;
+    downloadFile(body, filename);
+  };
+
+  handledDownloadWalletConfigClick = () => {
+    const { test } = this.props;
+    const nameBits = test.name().split(" ");
+    let body = test.params.multisigWalletConfig;
+    const filename = `wc-${nameBits[2].toLowerCase()}-${nameBits[1][0]}.txt`;
     downloadFile(body, filename);
   };
 
@@ -95,25 +109,27 @@ class TestRunBase extends React.Component {
               <Box align="center">
                 <ColdcardJSONReader
                   interaction={test.interaction()}
-                  onSuccess={this.resolve}
+                  onSuccess={this.startParse}
                   onStart={this.start}
-                  setError={test.resolve}
+                  setError={this.reset}
                   fileType="JSON"
                   validFileFormats=".json"
                 />
               </Box>
             )}
             {keystore.type === COLDCARD && test.unsignedTransaction && (
-              <Box align="center">
+              <Box align="center" style={{ marginTop: "2em" }}>
                 <ColdcardSigningButtons
                   handlePSBTDownloadClick={this.handleDownloadPSBTClick}
-                  handleWalletConfigDownloadClick={()=>'hi'}
+                  handleWalletConfigDownloadClick={
+                    this.handledDownloadWalletConfigClick
+                  }
                 />
                 <ColdcardPSBTReader
                   interaction={test.interaction()}
-                  onSuccess={this.resolve}
+                  onSuccess={this.startParse}
                   onStart={this.start}
-                  setError={test.resolve}
+                  setError={this.reset}
                   fileType="PSBT"
                   validFileFormats=".psbt"
                 />
@@ -130,17 +146,18 @@ class TestRunBase extends React.Component {
                   />
                 </Box>
               )}
-            {status === PENDING && keystore.type !== HERMIT && keystore.type !== COLDCARD && (
-              <Box align="center">
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={this.start}
-                >
-                  Start Test
-                </Button>
-              </Box>
-            )}
+            {status === PENDING &&
+              !Object.values(INDIRECT_KEYSTORES).includes(keystore.type) && (
+                <Box align="center">
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={this.start}
+                  >
+                    Start Test
+                  </Button>
+                </Box>
+              )}
             {keystore.type === HERMIT && !this.testComplete() && (
               <Box>
                 <HermitReader
@@ -247,6 +264,13 @@ class TestRunBase extends React.Component {
     this.handleResult(result);
   };
 
+  startParse = async (data) => {
+    const { test, testRunIndex, startTestRun } = this.props;
+    startTestRun(testRunIndex);
+    const result = await test.runParse(data);
+    this.handleResult(result);
+  };
+
   resolve = (actual) => {
     const { test } = this.props;
     const result = test.resolve(test.postprocess(actual));
@@ -261,8 +285,9 @@ class TestRunBase extends React.Component {
     endTestRun(testRunIndex, result.status, this.formatMessage(result));
   };
 
-  reset = () => {
-    const { testRunIndex, resetTestRun } = this.props;
+  reset = (errorMessage) => {
+    const { testRunIndex, resetTestRun, setErrorNotification } = this.props;
+    if (errorMessage) setErrorNotification(errorMessage);
     resetTestRun(testRunIndex);
   };
 

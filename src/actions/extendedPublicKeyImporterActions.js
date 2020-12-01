@@ -1,5 +1,5 @@
 import { wrappedNumberedActions } from "./utils";
-import {ExtendedPublicKey} from 'unchained-bitcoin';
+import { ExtendedPublicKey } from 'unchained-bitcoin';
 
 export const SET_EXTENDED_PUBLIC_KEY_IMPORTER_NAME =
   "SET_EXTENDED_PUBLIC_KEY_IMPORTER_NAME";
@@ -11,7 +11,7 @@ export const SET_EXTENDED_PUBLIC_KEY_IMPORTER_METHOD =
   "SET_EXTENDED_PUBLIC_KEY_IMPORTER_METHOD";
 export const SET_EXTENDED_PUBLIC_KEY_IMPORTER_EXTENDED_PUBLIC_KEY =
   "SET_EXTENDED_PUBLIC_KEY_IMPORTER_EXTENDED_PUBLIC_KEY";
-export const SET_EXTENDED_PUBLIC_KEY_IMPORTER_EXTENDED_PUBLIC_KEY_ROOT_XFP =
+export const SET_EXTENDED_PUBLIC_KEY_IMPORTER_EXTENDED_PUBLIC_KEY_ROOT_FINGERPRINT =
   "SET_EXTENDED_PUBLIC_KEY_IMPORTER_EXTENDED_PUBLIC_KEY_ROOT_XFP";
 export const SET_EXTENDED_PUBLIC_KEY_IMPORTER_FINALIZED =
   "SET_EXTENDED_PUBLIC_KEY_IMPORTER_FINALIZED";
@@ -24,7 +24,7 @@ export const {
   resetExtendedPublicKeyImporterBIP32Path,
   setExtendedPublicKeyImporterMethod,
   setExtendedPublicKeyImporterExtendedPublicKey,
-  setExtendedPublicKeyImporterExtendedPublicKeyRootXfp,
+  setExtendedPublicKeyImporterExtendedPublicKeyRootFingerprint,
   setExtendedPublicKeyImporterFinalized,
 } = wrappedNumberedActions({
   setExtendedPublicKeyImporterName: SET_EXTENDED_PUBLIC_KEY_IMPORTER_NAME,
@@ -32,7 +32,7 @@ export const {
   setExtendedPublicKeyImporterBIP32Path: SET_EXTENDED_PUBLIC_KEY_IMPORTER_BIP32_PATH,
   setExtendedPublicKeyImporterMethod: SET_EXTENDED_PUBLIC_KEY_IMPORTER_METHOD,
   setExtendedPublicKeyImporterExtendedPublicKey: SET_EXTENDED_PUBLIC_KEY_IMPORTER_EXTENDED_PUBLIC_KEY,
-  setExtendedPublicKeyImporterExtendedPublicKeyRootXfp: SET_EXTENDED_PUBLIC_KEY_IMPORTER_EXTENDED_PUBLIC_KEY_ROOT_XFP,
+  setExtendedPublicKeyImporterExtendedPublicKeyRootFingerprint: SET_EXTENDED_PUBLIC_KEY_IMPORTER_EXTENDED_PUBLIC_KEY_ROOT_FINGERPRINT,
   setExtendedPublicKeyImporterFinalized: SET_EXTENDED_PUBLIC_KEY_IMPORTER_FINALIZED,
 });
 

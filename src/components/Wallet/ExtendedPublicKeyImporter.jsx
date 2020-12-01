@@ -23,9 +23,9 @@ import {
   withStyles,
 } from "@material-ui/core";
 import Copyable from "../Copyable";
-import TextExtendedPublicKeyImporter from "./TextExtendedPublicKeyImporter";
-import IndirectDeviceExtendedPublicKeyImporter from "./IndirectDeviceExtendedPublicKeyImporter";
 import DirectDeviceExtendedPublicKeyImporter from "./DirectDeviceExtendedPublicKeyImporter";
+import IndirectDeviceExtendedPublicKeyImporter from "./IndirectDeviceExtendedPublicKeyImporter";
+import TextExtendedPublicKeyImporter from "./TextExtendedPublicKeyImporter";
 import EditableName from "../EditableName";
 import Conflict from "../CreateAddress/Conflict";
 import {
@@ -34,12 +34,12 @@ import {
   setExtendedPublicKeyImporterBIP32Path,
   setExtendedPublicKeyImporterMethod,
   setExtendedPublicKeyImporterExtendedPublicKey,
-  setExtendedPublicKeyImporterExtendedPublicKeyRootXfp,
+  setExtendedPublicKeyImporterExtendedPublicKeyRootFingerprint,
   setExtendedPublicKeyImporterFinalized,
 } from "../../actions/extendedPublicKeyImporterActions";
 
-const XPUB = "xpub";
 const TEXT = "text";
+const UNKNOWN = "unknown";
 
 const useStyles = () => ({
   xpub: {
@@ -84,7 +84,7 @@ class ExtendedPublicKeyImporter extends React.Component {
             value={extendedPublicKeyImporter.method}
             onChange={this.handleMethodChange}
           >
-            <MenuItem value="">{"< Select method >"}</MenuItem>
+            <MenuItem value={UNKNOWN}>{"< Select method >"}</MenuItem>
             <MenuItem value={TREZOR}>Trezor</MenuItem>
             <MenuItem value={COLDCARD}>Coldcard</MenuItem>
             <MenuItem value={LEDGER}>Ledger</MenuItem>
@@ -105,10 +105,9 @@ class ExtendedPublicKeyImporter extends React.Component {
       addressType,
       defaultBIP32Path,
     } = this.props;
-    if (
-      extendedPublicKeyImporter.method === TREZOR ||
-      extendedPublicKeyImporter.method === LEDGER
-    ) {
+    const { method } = extendedPublicKeyImporter;
+
+    if (method === TREZOR || method === LEDGER) {
       return (
         <DirectDeviceExtendedPublicKeyImporter
           extendedPublicKeyImporter={extendedPublicKeyImporter}
@@ -124,10 +123,7 @@ class ExtendedPublicKeyImporter extends React.Component {
         />
       );
     }
-    if (
-      extendedPublicKeyImporter.method === HERMIT ||
-      extendedPublicKeyImporter.method === COLDCARD
-    ) {
+    if (method === HERMIT || method === COLDCARD) {
       return (
         <IndirectDeviceExtendedPublicKeyImporter
           extendedPublicKeyImporter={extendedPublicKeyImporter}
@@ -424,7 +420,7 @@ const mapDispatchToProps = {
   setBIP32Path: setExtendedPublicKeyImporterBIP32Path,
   setMethod: setExtendedPublicKeyImporterMethod,
   setExtendedPublicKey: setExtendedPublicKeyImporterExtendedPublicKey,
-  setExtendedPublicKeyRootXfp: setExtendedPublicKeyImporterExtendedPublicKeyRootXfp,
+  setExtendedPublicKeyRootXfp: setExtendedPublicKeyImporterExtendedPublicKeyRootFingerprint,
   setFinalized: setExtendedPublicKeyImporterFinalized,
 };
 

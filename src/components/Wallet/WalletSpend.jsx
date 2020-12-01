@@ -139,7 +139,6 @@ class WalletSpend extends React.Component {
       inputs,
       inputsTotalSats,
       outputs,
-      walletDetailsText,
     } = this.props;
 
     return (
@@ -149,7 +148,7 @@ class WalletSpend extends React.Component {
             {spendingStep === SPEND_STEP_SIGN && (
               <Grid item md={12}>
                 <Box>
-                  <WalletSign walletDetailsText={walletDetailsText} />
+                  <WalletSign />
                 </Box>
               </Grid>
             )}

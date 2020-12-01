@@ -63,14 +63,33 @@ class Test {
     return this.params.expected;
   }
 
-  async actual() {
-    return this.postprocess(this.interaction().run());
+  async actual(data) {
+    return this.postprocess(
+      data ? this.interaction().parse(data) : this.interaction().run()
+    );
   }
 
   async run() {
     try {
       const actual = await this.actual();
       return this.resolve(actual);
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.error(e);
+      return { status: ERROR, message: e.message };
+    }
+  }
+
+  async runParse(data) {
+    try {
+      const actual = await this.actual(data);
+      // Both Coldcard responses include Objects
+      // but the xpub object includes a rootFingerprint
+      // while signatures only includes pubkeys and signatures
+      const sendToResolver = actual.rootFingerprint
+        ? actual.xpub
+        : Object.values(actual)[0];
+      return this.resolve(sendToResolver);
     } catch (e) {
       // eslint-disable-next-line no-console
       console.error(e);

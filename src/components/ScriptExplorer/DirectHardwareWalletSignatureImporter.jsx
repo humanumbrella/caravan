@@ -1,6 +1,5 @@
 import React from "react";
 import PropTypes from "prop-types";
-
 import { satoshisToBitcoins } from "unchained-bitcoin";
 import {
   PENDING,
@@ -9,8 +8,6 @@ import {
   ERROR,
   SignMultisigTransaction,
 } from "unchained-wallets";
-
-// Components
 import {
   Button,
   TextField,
@@ -31,7 +28,7 @@ class DirectHardwareWalletSignatureImporter extends React.Component {
     this.state = {
       signatureError: "",
       bip32PathError: "",
-      status: this.interaction(true).isSupported() ? PENDING : UNSUPPORTED,
+      status: this.interaction().isSupported() ? PENDING : UNSUPPORTED,
     };
   }
 

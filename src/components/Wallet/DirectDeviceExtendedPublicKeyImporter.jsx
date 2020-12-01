@@ -14,7 +14,6 @@ import {
   Box,
   Grid,
 } from "@material-ui/core";
-
 import InteractionMessages from "../InteractionMessages";
 
 class DirectDeviceExtendedPublicKeyImporter extends React.Component {

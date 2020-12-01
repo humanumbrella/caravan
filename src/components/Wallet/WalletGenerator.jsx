@@ -33,7 +33,8 @@ import {
   updateDepositSliceAction,
   updateChangeSliceAction,
   resetNodesFetchErrors as resetNodesFetchErrorsAction,
-  resetWallet as resetWalletAction, initialLoadComplete as initialLoadCompleteAction,
+  resetWallet as resetWalletAction,
+  initialLoadComplete as initialLoadCompleteAction,
 } from "../../actions/walletActions";
 import { fetchSliceData as fetchSliceDataAction } from "../../actions/braidActions";
 import {
@@ -328,7 +329,6 @@ class WalletGenerator extends React.Component {
       totalSigners,
       configuring,
       downloadWalletDetails,
-      walletDetailsText,
       client,
       generating,
     } = this.props;
@@ -336,7 +336,7 @@ class WalletGenerator extends React.Component {
     if (this.extendedPublicKeyCount() === totalSigners) {
       if (generating && !configuring) {
         return (
-          <WalletControl addNode={this.addNode} updateNode={this.updateNode} walletDetailsText={walletDetailsText}/>
+          <WalletControl addNode={this.addNode} updateNode={this.updateNode}/>
         );
       }
       return (

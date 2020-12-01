@@ -51,7 +51,7 @@ class WalletSign extends React.Component {
   }
 
   renderKeySelectors = () => {
-    const { requiredSigners, walletDetailsText } = this.props;
+    const { requiredSigners } = this.props;
     const keySelectors = [];
     for (
       let keySelectorNum = 1;
@@ -60,7 +60,7 @@ class WalletSign extends React.Component {
     ) {
       keySelectors.push(
         <Box key={keySelectorNum} mt={2}>
-          <ExtendedPublicKeySelector number={keySelectorNum} walletDetailsText={walletDetailsText} />
+          <ExtendedPublicKeySelector number={keySelectorNum} />
         </Box>
       );
     }

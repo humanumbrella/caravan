@@ -261,12 +261,9 @@ function updateOutputAmount(state, action) {
 }
 
 function finalizeOutputs(state, action) {
-  // const unsignedTransaction = unsignedMultisigTransaction(
-  //   state.network,
-  //   state.inputs,
-  //   state.outputs
-  // );
   let unsignedTransaction;
+  // First try to build the transaction via PSBT, if that fails (e.g. an input doesn't know about its braid),
+  // then try to build it using the old TransactionBuilder plumbing.
   try {
     const unsignedTransactionPSBT = unsignedMultisigPSBT(
       state.network,

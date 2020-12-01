@@ -11,20 +11,12 @@ import { SignMultisigTransaction } from "unchained-wallets";
 import { Box, Table, TableBody, TableRow, TableCell } from "@material-ui/core";
 import { externalLink } from "../utils";
 import Test from "./Test";
-import {parseSignaturesFromPSBT} from 'unchained-bitcoin/src';
 
 class SignMultisigTransactionTest extends Test {
-  // eslint-disable-next-line class-methods-use-this
   postprocess(result) {
-    // PSBT
-    if (result.startsWith && (result.startsWith('cHNidP') || result.startsWith('70736274ff'))) {
-      return Object.values(parseSignaturesFromPSBT(result))[0];
-    }
-
     return result.signatures ? result.signatures : result;
   }
 
-  // eslint-disable-next-line class-methods-use-this
   matches(expected, actual) {
     return JSON.stringify(expected) === JSON.stringify(actual);
   }
@@ -62,6 +54,21 @@ class SignMultisigTransactionTest extends Test {
             </TableRow>
 
             <TableRow>
+              <TableCell>Change Output Address:</TableCell>
+              <TableCell>
+                <code>{this.changeOutputAddress()}</code>
+              </TableCell>
+            </TableRow>
+
+            <TableRow>
+              <TableCell>Change Output Amount:</TableCell>
+              <TableCell>
+                {satoshisToBitcoins(this.changeOutputAmountSats()).toString()}{" "}
+                BTC
+              </TableCell>
+            </TableRow>
+
+            <TableRow>
               <TableCell>Fees:</TableCell>
               <TableCell>
                 {satoshisToBitcoins(this.feeSats()).toString()} BTC
@@ -87,8 +94,20 @@ class SignMultisigTransactionTest extends Test {
     return this.params.outputs[0].amountSats.toNumber();
   }
 
+  changeOutputAddress() {
+    return this.params.outputs[1].address;
+  }
+
+  changeOutputAmountSats() {
+    return this.params.outputs[1].amountSats.toNumber();
+  }
+
   feeSats() {
-    return this.inputsTotalSats() - this.outputAmountSats();
+    return (
+      this.inputsTotalSats() -
+      this.outputAmountSats() -
+      this.changeOutputAmountSats()
+    );
   }
 
   unsignedTransaction() {
@@ -97,10 +116,11 @@ class SignMultisigTransactionTest extends Test {
       const unsignedTransactionPSBT = unsignedMultisigPSBT(
         this.params.network,
         this.params.inputs,
-        this.params.outputs,
-      )
+        this.params.outputs
+      );
       unsignedTx = unsignedTransactionObjectFromPSBT(unsignedTransactionPSBT);
-    } catch(e) { // probably has an input that isn't braid aware.
+    } catch (e) {
+      // probably has an input that isn't braid aware.
       unsignedTx = unsignedMultisigTransaction(
         this.params.network,
         this.params.inputs,

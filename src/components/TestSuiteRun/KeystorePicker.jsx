@@ -9,6 +9,7 @@ import {
   COLDCARD,
   PENDING,
   ACTIVE,
+  INDIRECT_KEYSTORES,
   GetMetadata,
 } from "unchained-wallets";
 
@@ -27,6 +28,8 @@ import { setErrorNotification as setErrorNotificationAction } from "../../action
 
 import { KeystoreNote } from "./Note";
 import InteractionMessages from "../InteractionMessages";
+
+const NO_VERSION_DETECTION = ['', ...Object.values(INDIRECT_KEYSTORES)];
 
 class KeystorePickerBase extends React.Component {
   detectVersion = async () => {
@@ -103,7 +106,7 @@ class KeystorePickerBase extends React.Component {
 
           <Grid item md={2}>
             <Button
-              disabled={status === ACTIVE || type === "" || type === HERMIT || type === COLDCARD}
+              disabled={status === ACTIVE || NO_VERSION_DETECTION.includes(type)}
               onClick={this.detectVersion}
             >
               {status === ACTIVE ? "Detecting..." : "Detect"}
@@ -111,7 +114,7 @@ class KeystorePickerBase extends React.Component {
           </Grid>
         </Grid>
 
-        {type && type !== HERMIT && type !== COLDCARD && (
+        {type && !NO_VERSION_DETECTION.includes(type) && (
           <InteractionMessages
             messages={this.interaction().messagesFor({ state: status })}
           />

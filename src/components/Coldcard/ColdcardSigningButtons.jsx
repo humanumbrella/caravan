@@ -8,10 +8,6 @@ export class ColdcardSigningButtons extends Component {
     handleWalletConfigDownloadClick: PropTypes.func.isRequired,
   };
 
-  constructor(props) {
-    super(props);
-  }
-
   render = () => {
     const {handlePSBTDownloadClick, handleWalletConfigDownloadClick} = this.props;
     return (<>

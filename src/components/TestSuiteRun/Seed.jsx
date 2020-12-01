@@ -1,10 +1,10 @@
 import React from "react";
-import { connect } from "react-redux";
-import { TEST_FIXTURES } from "unchained-bitcoin";
+import {connect} from "react-redux";
+import {TEST_FIXTURES} from "unchained-bitcoin";
 
-import { Grid } from "@material-ui/core";
+import {Grid} from "@material-ui/core";
 
-const { bip39Phrase } = TEST_FIXTURES;
+const {bip39Phrase} = TEST_FIXTURES;
 
 class SeedBase extends React.Component {
   static renderSeedWord(word, i) {
@@ -17,26 +17,34 @@ class SeedBase extends React.Component {
 
   render() {
     return (
+      <>
       <Grid container>
-        <Grid item md={3}>
-          <ol>{bip39Phrase.slice(0, 6).map(SeedBase.renderSeedWord)}</ol>
-        </Grid>
-        <Grid item md={3}>
-          <ol start={7}>
-            {bip39Phrase.slice(6, 12).map(SeedBase.renderSeedWord)}
-          </ol>
-        </Grid>
-        <Grid item md={3}>
-          <ol start={13}>
-            {bip39Phrase.slice(12, 18).map(SeedBase.renderSeedWord)}
-          </ol>
-        </Grid>
-        <Grid item md={3}>
-          <ol start={19}>
-            {bip39Phrase.slice(18, 24).map(SeedBase.renderSeedWord)}
-          </ol>
-        </Grid>
+          <Grid item md={3}>
+            <ol>{bip39Phrase.slice(0, 6).map(SeedBase.renderSeedWord)}</ol>
+          </Grid>
+          <Grid item md={3}>
+            <ol start={7}>
+              {bip39Phrase.slice(6, 12).map(SeedBase.renderSeedWord)}
+            </ol>
+          </Grid>
+          <Grid item md={3}>
+            <ol start={13}>
+              {bip39Phrase.slice(12, 18).map(SeedBase.renderSeedWord)}
+            </ol>
+          </Grid>
+          <Grid item md={3}>
+            <ol start={19}>
+              {bip39Phrase.slice(18, 24).map(SeedBase.renderSeedWord)}
+            </ol>
+          </Grid>
       </Grid>
+      <Grid style={{marginTop:'2em', marginBottom:'2em'}}>
+        If using a simulator, here's a handy command with the same seed phrase:<br />
+        <code>
+          ./simulator.py --seed '{bip39Phrase.join(" ")}'
+        </code>
+      </Grid>
+      </>
     );
   }
 }

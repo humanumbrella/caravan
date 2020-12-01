@@ -1,18 +1,23 @@
 import React from "react";
 import PropTypes from "prop-types";
-import {connect} from "react-redux";
-import {satoshisToBitcoins, validateBIP32Index, validateBIP32Path, validateExtendedPublicKey} from "unchained-bitcoin";
-import {Box, Button, FormHelperText, Grid} from "@material-ui/core";
-import {downloadFile} from "../../utils";
+import { connect } from "react-redux";
+import {
+  satoshisToBitcoins,
+  validateBIP32Index,
+  validateBIP32Path,
+  validateExtendedPublicKey,
+} from "unchained-bitcoin";
+import { Box, Button, FormHelperText, Grid } from "@material-ui/core";
+import { downloadFile } from "../../utils";
 import {
   resetWallet as resetWalletAction,
   updateChangeSliceAction,
   updateDepositSliceAction,
   updateWalletNameAction as updateWalletNameActionImport,
 } from "../../actions/walletActions";
-import {fetchSliceData as fetchSliceDataAction} from "../../actions/braidActions";
+import { fetchSliceData as fetchSliceDataAction } from "../../actions/braidActions";
 import walletSelectors from "../../selectors";
-import {CARAVAN_CONFIG} from "./constants";
+import { CARAVAN_CONFIG } from "./constants";
 import WalletInfoCard from "./WalletInfoCard";
 import NetworkPicker from "../NetworkPicker";
 import QuorumPicker from "../QuorumPicker";
@@ -22,7 +27,11 @@ import StartingAddressIndexPicker from "../StartingAddressIndexPicker";
 import WalletGenerator from "./WalletGenerator";
 import ExtendedPublicKeyImporter from "./ExtendedPublicKeyImporter";
 import WalletActionsPanel from "./WalletActionsPanel";
-import {getUnknownAddresses, getUnknownAddressSlices} from "../../selectors/wallet";
+import {
+  getUnknownAddresses,
+  getUnknownAddressSlices,
+  getWalletDetailsText,
+} from "../../selectors/wallet";
 import {
   setAddressType as setAddressTypeAction,
   setNetwork as setNetworkAction,
@@ -33,15 +42,20 @@ import {
 import {
   setExtendedPublicKeyImporterBIP32Path as setExtendedPublicKeyImporterBIP32PathAction,
   setExtendedPublicKeyImporterExtendedPublicKey as setExtendedPublicKeyImporterExtendedPublicKeyAction,
-  setExtendedPublicKeyImporterExtendedPublicKeyRootXfp as setExtendedPublicKeyImporterExtendedPublicKeyRootXfpAction,
+  setExtendedPublicKeyImporterExtendedPublicKeyRootFingerprint as setExtendedPublicKeyImporterExtendedPublicKeyRootFingerprintAction,
   setExtendedPublicKeyImporterFinalized as setExtendedPublicKeyImporterFinalizedAction,
   setExtendedPublicKeyImporterMethod as setExtendedPublicKeyImporterMethodAction,
   setExtendedPublicKeyImporterName as setExtendedPublicKeyImporterNameAction,
   setExtendedPublicKeyImporterVisible as setExtendedPublicKeyImporterVisibleAction,
 } from "../../actions/extendedPublicKeyImporterActions";
-import {wrappedActions} from "../../actions/utils";
-import {SET_CLIENT_PASSWORD, SET_CLIENT_TYPE, SET_CLIENT_URL, SET_CLIENT_USERNAME} from "../../actions/clientActions";
-import {clientPropTypes, slicePropTypes} from "../../proptypes";
+import { wrappedActions } from "../../actions/utils";
+import {
+  SET_CLIENT_PASSWORD,
+  SET_CLIENT_TYPE,
+  SET_CLIENT_URL,
+  SET_CLIENT_USERNAME,
+} from "../../actions/clientActions";
+import { clientPropTypes, slicePropTypes } from "../../proptypes";
 
 class CreateWallet extends React.Component {
   static validateProperties(config, properties, key) {
@@ -220,7 +234,7 @@ class CreateWallet extends React.Component {
       setStartingAddressIndex,
       setExtendedPublicKeyImporterMethod,
       setExtendedPublicKeyImporterExtendedPublicKey,
-      setExtendedPublicKeyImporterExtendedPublicKeyRootXfp,
+      setExtendedPublicKeyImporterExtendedPublicKeyRootFingerprint,
       setExtendedPublicKeyImporterBIP32Path,
       setExtendedPublicKeyImporterFinalized,
       setExtendedPublicKeyImporterName,
@@ -273,9 +287,15 @@ class CreateWallet extends React.Component {
           extendedPublicKey.xpub
         );
         if (extendedPublicKey.xfp) {
-          setExtendedPublicKeyImporterExtendedPublicKeyRootXfp(number, extendedPublicKey.xfp);
+          setExtendedPublicKeyImporterExtendedPublicKeyRootFingerprint(
+            number,
+            extendedPublicKey.xfp
+          );
         } else {
-          setExtendedPublicKeyImporterExtendedPublicKeyRootXfp(number, "unknown");
+          setExtendedPublicKeyImporterExtendedPublicKeyRootFingerprint(
+            number,
+            "unknown"
+          );
         }
 
         setExtendedPublicKeyImporterFinalized(number, true);
@@ -368,94 +388,10 @@ class CreateWallet extends React.Component {
   };
 
   downloadWalletDetails = (event) => {
+    const { walletDetailsText } = this.props;
     event.preventDefault();
-    const body = this.walletDetailsText();
     const filename = this.walletDetailsFilename();
-    downloadFile(body, filename);
-  };
-
-  walletDetailsText = () => {
-    const {
-      addressType,
-      network,
-      totalSigners,
-      requiredSigners,
-      walletName,
-      startingAddressIndex,
-    } = this.props;
-    return `{
-  "name": "${walletName}",
-  "addressType": "${addressType}",
-  "network": "${network}",
-  "client":  ${this.clientDetails()},
-  "quorum": {
-    "requiredSigners": ${requiredSigners},
-    "totalSigners": ${totalSigners}
-  },
-  "extendedPublicKeys": [
-${this.extendedPublicKeyImporterBIP32Paths()}
-  ],
-  "startingAddressIndex": ${startingAddressIndex}
-}`;
-  };
-
-  clientDetails = () => {
-    const { client } = this.props;
-
-    if (client.type === "private") {
-      return `{
-    "type": "private",
-    "url": "${client.url}",
-    "username": "${client.username}"
-  }`;
-    }
-    return `{
-    "type": "public"
-  }`;
-  };
-
-  extendedPublicKeyImporterBIP32Paths = () => {
-    const { totalSigners } = this.props;
-    const extendedPublicKeyImporterBIP32Paths = [];
-    for (
-      let extendedPublicKeyImporterNum = 1;
-      extendedPublicKeyImporterNum <= totalSigners;
-      extendedPublicKeyImporterNum += 1
-    ) {
-      extendedPublicKeyImporterBIP32Paths.push(
-        `${this.extendedPublicKeyImporterBIP32Path(
-          extendedPublicKeyImporterNum
-        )}${extendedPublicKeyImporterNum < totalSigners ? "," : ""}`
-      );
-    }
-    return extendedPublicKeyImporterBIP32Paths.join("\n");
-  };
-
-  extendedPublicKeyImporterBIP32Path = (number) => {
-    const { extendedPublicKeyImporters } = this.props;
-    const extendedPublicKeyImporter = extendedPublicKeyImporters[number];
-    const bip32Path =
-      extendedPublicKeyImporter.method === "text"
-        ? "Unknown (make sure you have written this down previously!)"
-        : extendedPublicKeyImporter.bip32Path;
-    const rootFingerprint =
-      extendedPublicKeyImporter.rootXfp === "Unknown"
-        ? "00000000"
-        : extendedPublicKeyImporter.rootXfp;
-    return extendedPublicKeyImporter.method === "unknown"
-        ? `    {
-        "name": "${extendedPublicKeyImporter.name}",
-        "bip32Path": "${bip32Path}",
-        "xpub": "${extendedPublicKeyImporter.extendedPublicKey}",
-        "xfp" : "${rootFingerprint}"
-        }`
-        : `    {
-        "name": "${extendedPublicKeyImporter.name}",
-        "bip32Path": "${bip32Path}",
-        "xpub": "${extendedPublicKeyImporter.extendedPublicKey}",
-        "xfp" : "${rootFingerprint}",
-        "method": "${extendedPublicKeyImporter.method}"
-      }`;
+    downloadFile(walletDetailsText, filename);
   };
 
   walletDetailsFilename = () => {
@@ -583,7 +519,6 @@ ${this.extendedPublicKeyImporterBIP32Paths()}
                   generating={generating}
                   setGenerating={(value) => this.setGenerating(value)}
                   downloadWalletDetails={this.downloadWalletDetails}
-                  walletDetailsText={this.walletDetailsText}
                   // eslint-disable-next-line no-return-assign
                   refreshNodes={(click) => (this.generatorRefresh = click)} // FIXME TIGHT COUPLING ALERT, this calls function downstream
                 />
@@ -632,7 +567,8 @@ CreateWallet.propTypes = {
   setStartingAddressIndex: PropTypes.func.isRequired,
   setExtendedPublicKeyImporterMethod: PropTypes.func.isRequired,
   setExtendedPublicKeyImporterExtendedPublicKey: PropTypes.func.isRequired,
-  setExtendedPublicKeyImporterExtendedPublicKeyRootXfp: PropTypes.func.isRequired,
+  setExtendedPublicKeyImporterExtendedPublicKeyRootFingerprint:
+    PropTypes.func.isRequired,
   setExtendedPublicKeyImporterBIP32Path: PropTypes.func.isRequired,
   setExtendedPublicKeyImporterFinalized: PropTypes.func.isRequired,
   setExtendedPublicKeyImporterName: PropTypes.func.isRequired,
@@ -662,6 +598,7 @@ function mapStateToProps(state) {
     },
     confirmedBalance: walletSelectors.getConfirmedBalance(state),
     pendingBalance: walletSelectors.getPendingBalance(state),
+    walletDetailsText: getWalletDetailsText(state),
     unknownAddresses: getUnknownAddresses(state),
     unknownSlices: getUnknownAddressSlices(state),
     ...state.wallet,
@@ -681,7 +618,7 @@ const mapDispatchToProps = {
   setExtendedPublicKeyImporterMethod: setExtendedPublicKeyImporterMethodAction,
   setExtendedPublicKeyImporterExtendedPublicKey: setExtendedPublicKeyImporterExtendedPublicKeyAction,
   setExtendedPublicKeyImporterBIP32Path: setExtendedPublicKeyImporterBIP32PathAction,
-  setExtendedPublicKeyImporterExtendedPublicKeyRootXfp: setExtendedPublicKeyImporterExtendedPublicKeyRootXfpAction,
+  setExtendedPublicKeyImporterExtendedPublicKeyRootFingerprint: setExtendedPublicKeyImporterExtendedPublicKeyRootFingerprintAction,
   setExtendedPublicKeyImporterName: setExtendedPublicKeyImporterNameAction,
   setExtendedPublicKeyImporterFinalized: setExtendedPublicKeyImporterFinalizedAction,
   setExtendedPublicKeyImporterVisible: setExtendedPublicKeyImporterVisibleAction,
