@@ -32,7 +32,7 @@ class ExportPublicKeyTest extends Test {
   }
 
   expected() {
-    return TEST_FIXTURES.nodes[this.params.bip32Path].pub;
+    return TEST_FIXTURES.keys.open_source.nodes[this.params.bip32Path].pub;
   }
 }
 

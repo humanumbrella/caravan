@@ -23,8 +23,8 @@ import {
   withStyles,
 } from "@material-ui/core";
 import Copyable from "../Copyable";
-import DirectDeviceExtendedPublicKeyImporter from "./DirectDeviceExtendedPublicKeyImporter";
-import IndirectDeviceExtendedPublicKeyImporter from "./IndirectDeviceExtendedPublicKeyImporter";
+import DirectExtendedPublicKeyImporter from "./DirectExtendedPublicKeyImporter";
+import IndirectExtendedPublicKeyImporter from "./IndirectExtendedPublicKeyImporter";
 import TextExtendedPublicKeyImporter from "./TextExtendedPublicKeyImporter";
 import EditableName from "../EditableName";
 import Conflict from "../CreateAddress/Conflict";
@@ -109,7 +109,7 @@ class ExtendedPublicKeyImporter extends React.Component {
 
     if (method === TREZOR || method === LEDGER) {
       return (
-        <DirectDeviceExtendedPublicKeyImporter
+        <DirectExtendedPublicKeyImporter
           extendedPublicKeyImporter={extendedPublicKeyImporter}
           validateAndSetExtendedPublicKey={this.validateAndSetExtendedPublicKey}
           validateAndSetBIP32Path={this.validateAndSetBIP32Path}
@@ -125,7 +125,7 @@ class ExtendedPublicKeyImporter extends React.Component {
     }
     if (method === HERMIT || method === COLDCARD) {
       return (
-        <IndirectDeviceExtendedPublicKeyImporter
+        <IndirectExtendedPublicKeyImporter
           extendedPublicKeyImporter={extendedPublicKeyImporter}
           validateAndSetExtendedPublicKey={this.validateAndSetExtendedPublicKey}
           validateAndSetBIP32Path={this.validateAndSetBIP32Path}
