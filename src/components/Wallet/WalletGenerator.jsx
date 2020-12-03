@@ -4,6 +4,7 @@ import { connect } from "react-redux";
 import { debounce } from "lodash";
 import {
   deriveMultisigByPath,
+  ExtendedPublicKey,
   generateBraid,
 } from "unchained-bitcoin";
 import {
@@ -37,10 +38,7 @@ import {
   initialLoadComplete as initialLoadCompleteAction,
 } from "../../actions/walletActions";
 import { fetchSliceData as fetchSliceDataAction } from "../../actions/braidActions";
-import {
-  generateRichExtendedPublicKeys,
-  setExtendedPublicKeyImporterVisible,
-} from "../../actions/extendedPublicKeyImporterActions";
+import { setExtendedPublicKeyImporterVisible } from "../../actions/extendedPublicKeyImporterActions";
 import { setIsWallet as setIsWalletAction } from "../../actions/transactionActions";
 import { wrappedActions } from "../../actions/utils";
 import {
@@ -203,14 +201,16 @@ class WalletGenerator extends React.Component {
       requiredSigners,
     } = this.props;
 
-    const extendedPublicKeys = generateRichExtendedPublicKeys(extendedPublicKeyImporters);
-    const chroot = isChange ? '1' : '0';
+    const extendedPublicKeys = this.generateRichExtendedPublicKeys(
+      extendedPublicKeyImporters
+    );
+    const index = isChange ? "1" : "0";
     const braid = generateBraid(
-        network,
-        addressType,
-        extendedPublicKeys,
-        requiredSigners,
-        chroot,
+      network,
+      addressType,
+      extendedPublicKeys,
+      requiredSigners,
+      index,
     );
     const multisig = deriveMultisigByPath(braid, bip32Path);
 
@@ -308,6 +308,26 @@ class WalletGenerator extends React.Component {
     }
   };
 
+  generateRichExtendedPublicKeys(extendedPublicKeyImporters) {
+    return Object.values(extendedPublicKeyImporters).map((importer) => {
+      let extendedPublicKey = ExtendedPublicKey.fromBase58(
+        importer.extendedPublicKey
+      );
+      extendedPublicKey.setRootFingerprint(
+        importer.rootXfp && importer.rootXfp.toLowerCase() !== "unknown"
+          ? importer.rootXfp
+          : "00000000"
+      );
+      extendedPublicKey.setBip32Path(
+        importer.bip32Path && importer.bip32Path.toLowerCase() !== "unknown"
+          ? importer.bip32Path
+          : "m" + "/0".repeat(extendedPublicKey.depth)
+      );
+      extendedPublicKey.addBase58String();
+      return extendedPublicKey;
+    });
+  }
+
   async handlePasswordEnter(event) {
     event.preventDefault();
     this.debouncedTestConnection.cancel();
@@ -336,7 +356,7 @@ class WalletGenerator extends React.Component {
     if (this.extendedPublicKeyCount() === totalSigners) {
       if (generating && !configuring) {
         return (
-          <WalletControl addNode={this.addNode} updateNode={this.updateNode}/>
+          <WalletControl addNode={this.addNode} updateNode={this.updateNode} />
         );
       }
       return (

@@ -1,10 +1,12 @@
 import React from "react";
-import {connect} from "react-redux";
-import {TEST_FIXTURES} from "unchained-bitcoin";
+import { connect } from "react-redux";
+import { TEST_FIXTURES } from "unchained-bitcoin";
 
-import {Grid} from "@material-ui/core";
+import { Grid } from "@material-ui/core";
+import { COLDCARD } from "unchained-wallets";
+import PropTypes from "prop-types";
 
-const {bip39Phrase} = TEST_FIXTURES;
+const { bip39Phrase } = TEST_FIXTURES.keys.open_source;
 
 class SeedBase extends React.Component {
   static renderSeedWord(word, i) {
@@ -16,9 +18,10 @@ class SeedBase extends React.Component {
   }
 
   render() {
+    const { keystore } = this.props;
     return (
       <>
-      <Grid container>
+        <Grid container>
           <Grid item md={3}>
             <ol>{bip39Phrase.slice(0, 6).map(SeedBase.renderSeedWord)}</ol>
           </Grid>
@@ -37,17 +40,28 @@ class SeedBase extends React.Component {
               {bip39Phrase.slice(18, 24).map(SeedBase.renderSeedWord)}
             </ol>
           </Grid>
-      </Grid>
-      <Grid style={{marginTop:'2em', marginBottom:'2em'}}>
-        If using a simulator, here's a handy command with the same seed phrase:<br />
-        <code>
-          ./simulator.py --seed '{bip39Phrase.join(" ")}'
-        </code>
-      </Grid>
+        </Grid>
+        {keystore && keystore.type === COLDCARD && (
+          <Grid style={{ marginTop: "2em", marginBottom: "2em" }}>
+            If using the simulator, here's a handy command with the same seed
+            phrase:
+            <br />
+            <code>./simulator.py --seed '{bip39Phrase.join(" ")}'</code>
+          </Grid>
+        )}
       </>
     );
   }
 }
+
+SeedBase.propTypes = {
+  keystore: PropTypes.shape({
+    note: PropTypes.string,
+    type: PropTypes.string,
+    status: PropTypes.string,
+    version: PropTypes.string,
+  }),
+};
 
 const mapStateToProps = () => {
   return {};

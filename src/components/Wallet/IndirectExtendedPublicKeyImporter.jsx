@@ -20,7 +20,7 @@ import InteractionMessages from "../InteractionMessages";
 import { ColdcardJSONReader } from "../Coldcard";
 import { MAINNET } from "unchained-bitcoin";
 
-class IndirectDeviceExtendedPublicKeyImporter extends React.Component {
+class IndirectExtendedPublicKeyImporter extends React.Component {
   constructor(props) {
     super(props);
     const { network } = props;
@@ -244,7 +244,7 @@ class IndirectDeviceExtendedPublicKeyImporter extends React.Component {
   };
 }
 
-IndirectDeviceExtendedPublicKeyImporter.propTypes = {
+IndirectExtendedPublicKeyImporter.propTypes = {
   enableChangeMethod: PropTypes.func.isRequired,
   extendedPublicKeyImporter: PropTypes.shape({
     method: PropTypes.string,
@@ -260,4 +260,4 @@ IndirectDeviceExtendedPublicKeyImporter.propTypes = {
   validateAndSetRootFingerprint: PropTypes.func.isRequired,
 };
 
-export default IndirectDeviceExtendedPublicKeyImporter;
+export default IndirectExtendedPublicKeyImporter;

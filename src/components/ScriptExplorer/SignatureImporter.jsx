@@ -22,8 +22,8 @@ import {
 } from "@material-ui/core";
 import Copyable from "../Copyable";
 import TextSignatureImporter from "./TextSignatureImporter";
-import DirectHardwareWalletSignatureImporter from "./DirectHardwareWalletSignatureImporter";
-import IndirectHardwareWalletSignatureImporter from "./IndirectHardwareWalletSignatureImporter";
+import DirectSignatureImporter from "./DirectSignatureImporter";
+import IndirectSignatureImporter from "./IndirectSignatureImporter";
 import EditableName from "../EditableName";
 import {
   setSignatureImporterName,
@@ -146,7 +146,7 @@ class SignatureImporter extends React.Component {
 
     if (method === TREZOR || method === LEDGER) {
       return (
-        <DirectHardwareWalletSignatureImporter
+        <DirectSignatureImporter
           network={network}
           signatureImporter={signatureImporter}
           signatureImporters={signatureImporters}
@@ -167,7 +167,7 @@ class SignatureImporter extends React.Component {
     }
     if (method === HERMIT || method === COLDCARD) {
       return (
-        <IndirectHardwareWalletSignatureImporter
+        <IndirectSignatureImporter
           network={network}
           signatureImporter={signatureImporter}
           inputs={inputs}

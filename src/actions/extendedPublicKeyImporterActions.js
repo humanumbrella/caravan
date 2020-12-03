@@ -1,5 +1,4 @@
 import { wrappedNumberedActions } from "./utils";
-import { ExtendedPublicKey } from "unchained-bitcoin";
 
 export const SET_EXTENDED_PUBLIC_KEY_IMPORTER_NAME =
   "SET_EXTENDED_PUBLIC_KEY_IMPORTER_NAME";
@@ -41,24 +40,4 @@ export function setExtendedPublicKeyImporterVisible(value) {
     type: SET_EXTENDED_PUBLIC_KEY_IMPORTER_VISIBLE,
     value,
   };
-}
-
-export function generateRichExtendedPublicKeys(extendedPublicKeyImporters) {
-  return Object.values(extendedPublicKeyImporters).map((importer) => {
-    let extendedPublicKey = ExtendedPublicKey.fromBase58(
-      importer.extendedPublicKey
-    );
-    extendedPublicKey.setRootFingerprint(
-      importer.rootXfp && importer.rootXfp.toLowerCase() !== "unknown"
-        ? importer.rootXfp
-        : "00000000"
-    );
-    extendedPublicKey.setBip32Path(
-      importer.bip32Path && importer.bip32Path.toLowerCase() !== "unknown"
-        ? importer.bip32Path
-        : "m" + "/0".repeat(extendedPublicKey.depth)
-    );
-    extendedPublicKey.addBase58String();
-    return extendedPublicKey;
-  });
 }

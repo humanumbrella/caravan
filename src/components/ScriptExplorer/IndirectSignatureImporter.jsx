@@ -31,7 +31,7 @@ import { connect } from "react-redux";
 import moment from "moment";
 import { getWalletDetailsText } from "../../selectors/wallet";
 
-class IndirectHardwareWalletSignatureImporter extends React.Component {
+class IndirectSignatureImporter extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -323,7 +323,7 @@ class IndirectHardwareWalletSignatureImporter extends React.Component {
   };
 }
 
-IndirectHardwareWalletSignatureImporter.propTypes = {
+IndirectSignatureImporter.propTypes = {
   network: PropTypes.string.isRequired,
   inputs: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   outputs: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
@@ -350,4 +350,4 @@ const mapDispatchToProps = {};
 export default connect(
   mapStateToProps,
   mapDispatchToProps
-)(IndirectHardwareWalletSignatureImporter);
+)(IndirectSignatureImporter);

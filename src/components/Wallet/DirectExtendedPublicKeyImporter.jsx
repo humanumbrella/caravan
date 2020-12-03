@@ -16,7 +16,7 @@ import {
 } from "@material-ui/core";
 import InteractionMessages from "../InteractionMessages";
 
-class DirectDeviceExtendedPublicKeyImporter extends React.Component {
+class DirectExtendedPublicKeyImporter extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -178,7 +178,7 @@ class DirectDeviceExtendedPublicKeyImporter extends React.Component {
   };
 }
 
-DirectDeviceExtendedPublicKeyImporter.propTypes = {
+DirectExtendedPublicKeyImporter.propTypes = {
   network: PropTypes.string.isRequired,
   extendedPublicKeyImporter: PropTypes.shape({
     bip32Path: PropTypes.string,
@@ -193,4 +193,4 @@ DirectDeviceExtendedPublicKeyImporter.propTypes = {
   disableChangeMethod: PropTypes.func.isRequired,
 };
 
-export default DirectDeviceExtendedPublicKeyImporter;
+export default DirectExtendedPublicKeyImporter;

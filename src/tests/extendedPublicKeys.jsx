@@ -36,8 +36,8 @@ class ExportExtendedPublicKeyTest extends Test {
 
   expected() {
     if (this.params.network === MAINNET)
-      return TEST_FIXTURES.nodes[this.params.bip32Path].xpub;
-    return TEST_FIXTURES.nodes[this.params.bip32Path].tpub;
+      return TEST_FIXTURES.keys.open_source.nodes[this.params.bip32Path].xpub;
+    return TEST_FIXTURES.keys.open_source.nodes[this.params.bip32Path].tpub;
   }
 }
 
