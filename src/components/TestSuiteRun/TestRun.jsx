@@ -82,9 +82,25 @@ class TestRunBase extends React.Component {
   handledDownloadWalletConfigClick = () => {
     const { test } = this.props;
     const nameBits = test.name().split(" ");
-    let body = test.params.multisigWalletConfig;
-    const filename = `wc-${nameBits[2].toLowerCase()}-${nameBits[1][0]}.txt`;
-    downloadFile(body, filename);
+    const name = `${nameBits[2].toLowerCase()}-${nameBits[1][0]}`;
+    // FIXME - need to know firmware version and then set P2WSH-P2SH vs P2SH-P2WSH appropriately
+    //   leaving it as P2WSH-P2SH for now.
+    let output = `# Coldcard Multisig setup file for test suite
+#
+Name: ${name}
+Policy: 2 of 2
+Format: ${test.params.format.includes("-") ? "P2WSH-P2SH" : test.params.format}
+Derivation: ${test.params.derivation}
+
+`;
+    // We need to loop over xpubs and output `xfp: xpub` for each
+    let xpubs = test.params.extendedPublicKeys.map(
+      (xpub) => `${xpub.rootFingerprint}: ${xpub.base58String}`
+    );
+    output += xpubs.join("\r\n");
+    output += "\r\n";
+    const filename = `wc-${name}.txt`;
+    downloadFile(output, filename);
   };
 
   render = () => {
@@ -112,8 +128,7 @@ class TestRunBase extends React.Component {
                   onReceive={this.startParse}
                   onStart={this.start}
                   setError={this.reset}
-                  fileType="JSON"
-                  validFileFormats=".json"
+                  isTest={true}
                 />
               </Box>
             )}

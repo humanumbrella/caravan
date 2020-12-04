@@ -42,11 +42,12 @@ class ColdcardFileReaderBase extends Component {
       bip32PathIsDefault,
       hasError,
       errorMessage,
+      isTest,
     } = this.props;
     const { fileType } = this.state;
     return (
       <Grid container direction="column">
-        {fileType === "JSON" && (
+        {fileType === "JSON" && !isTest && (
           <Grid container>
             <Grid item md={6}>
               <TextField
