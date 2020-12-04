@@ -3,16 +3,15 @@ import PropTypes from "prop-types";
 import { COLDCARD } from "unchained-wallets";
 import { FormGroup, FormHelperText } from "@material-ui/core";
 import { ColdcardJSONReader } from "../Coldcard";
-import { MAINNET } from "unchained-bitcoin";
+import { MAINNET, P2SH } from "unchained-bitcoin";
 import IndirectExtendedPublicKeyImporter from "../Wallet/IndirectExtendedPublicKeyImporter";
 
 class ColdcardExtendedPublicKeyImporter extends React.Component {
   constructor(props) {
     super(props);
-    const { network } = props;
-    const coinPath = network === MAINNET ? "0" : "1";
+    const coldcardBIP32Path = this.getColdcardBip32Path();
     this.state = {
-      COLDCARD_MULTISIG_BIP32_PATH: `m/45'/${coinPath}/0`,
+      COLDCARD_MULTISIG_BIP32_PATH: coldcardBIP32Path,
     };
   }
 
@@ -30,18 +29,31 @@ class ColdcardExtendedPublicKeyImporter extends React.Component {
   };
 
   componentDidUpdate(prevProps, prevState, snapshot) {
-    const { validateAndSetBIP32Path, network } = this.props;
-    const coinPath = network === MAINNET ? "0" : "1";
-    const pathUpdate = `m/45'/${coinPath}/0`;
-    if (prevProps.network !== network) {
-      this.setState({ COLDCARD_MULTISIG_BIP32_PATH: pathUpdate });
+    const { validateAndSetBIP32Path, network, addressType } = this.props;
+    const coldcardBIP32Path = this.getColdcardBip32Path();
+
+    // Any updates to the network/addressType we should set the BIP32Path
+    if (
+      prevProps.network !== network ||
+      prevProps.addressType !== addressType
+    ) {
+      this.setState({ COLDCARD_MULTISIG_BIP32_PATH: coldcardBIP32Path });
       validateAndSetBIP32Path(
-        pathUpdate,
+        coldcardBIP32Path,
         () => {},
         () => {}
       );
     }
   }
+
+  // Unfortunately not possible to use our Multisig P2SH ROOT on a Coldcard atm
+  // because they do not allow us to export m/45'/{0-1}'/0' yet.
+  getColdcardBip32Path = () => {
+    const { network, addressType, defaultBIP32Path } = this.props;
+    const coinPath = network === MAINNET ? "0" : "1";
+    const coldcardP2SHPath = `m/45'/${coinPath}/0`;
+    return addressType === P2SH ? coldcardP2SHPath : defaultBIP32Path;
+  };
 
   render = () => {
     const {

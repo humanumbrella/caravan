@@ -3,18 +3,18 @@ import { ColdcardSigningButtons } from "./ColdcardSigningButtons";
 import { ColdcardPSBTReader } from "./ColdcardFileReader";
 import moment from "moment";
 import { downloadFile } from "../../utils";
-import { ACTIVE, COLDCARD, ConfigAdapter } from "unchained-wallets";
+import { COLDCARD, ConfigAdapter } from "unchained-wallets";
 import { getWalletDetailsText } from "../../selectors/wallet";
 import { connect } from "react-redux";
 
 class ColdcardSigner extends Component {
   handlePSBTDownloadClick = () => {
-    const { walletName, interaction } = this.props;
+    const { walletName, interaction, setActive } = this.props;
     let body = interaction.request().toBase64();
     const timestamp = moment().format("HHmm");
     const filename = `${timestamp}-${walletName}.psbt`;
     downloadFile(body, filename);
-    this.setState({ status: ACTIVE });
+    setActive();
   };
 
   handleWalletConfigDownloadClick = () => {

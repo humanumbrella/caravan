@@ -149,6 +149,7 @@ class ExtendedPublicKeyImporter extends React.Component {
           validateAndSetBIP32Path={this.validateAndSetBIP32Path}
           validateAndSetRootFingerprint={this.validateAndSetRootFingerprint}
           addressType={addressType}
+          defaultBIP32Path={defaultBIP32Path}
           network={network}
         />
       );

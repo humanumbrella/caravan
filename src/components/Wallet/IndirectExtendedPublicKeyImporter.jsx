@@ -6,21 +6,15 @@ import {
   PENDING,
   UNSUPPORTED,
 } from "unchained-wallets";
-import {
-  Button,
-  FormGroup,
-  FormHelperText,
-  Grid,
-  TextField,
-} from "@material-ui/core";
+import { FormGroup, FormHelperText } from "@material-ui/core";
 import InteractionMessages from "../InteractionMessages";
 
 class IndirectExtendedPublicKeyImporter extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      extendedPublicKeyError: "",
       status: this.interaction().isSupported() ? PENDING : UNSUPPORTED,
+      extendedPublicKeyError: "",
     };
   }
 
@@ -49,53 +43,28 @@ class IndirectExtendedPublicKeyImporter extends React.Component {
     const {
       Reader,
       disableChangeMethod,
-      extendedPublicKeyImporter,
       resetBIP32Path,
+      extendedPublicKeyImporter,
     } = this.props;
     const { status, extendedPublicKeyError } = this.state;
     return (
       <FormGroup>
-        <Grid container>
-          <Grid item md={6}>
-            <TextField
-              fullWidth
-              label="BIP32 Path"
-              value={extendedPublicKeyImporter.bip32Path}
-              onChange={this.handleBIP32PathChange}
-              disabled={status !== PENDING}
-              error={this.hasBIP32PathError()}
-              helperText={this.bip32PathError()}
-            />
-          </Grid>
-          <Grid item md={6}>
-            {!this.bip32PathIsDefault(true) && (
-              <Button
-                type="button"
-                variant="contained"
-                size="small"
-                onClick={resetBIP32Path}
-                disabled={status !== PENDING}
-              >
-                Default
-              </Button>
-            )}
-          </Grid>
-          <FormHelperText>
-            Use the default value if you don&rsquo;t understand BIP32 paths.
-          </FormHelperText>
-          <Reader
-            setError={this.setError}
-            hasError={this.hasBIP32PathError()}
-            onReceive={this.onReceive}
-            interaction={this.interaction()}
-            disableChangeMethod={disableChangeMethod}
-            extendedPublicKeyImporter={extendedPublicKeyImporter}
-          />
-
-          <InteractionMessages
-            messages={this.interaction().messagesFor({ state: status })}
-          />
-        </Grid>
+        <Reader
+          setError={this.setError}
+          hasError={this.hasBIP32PathError()}
+          errorMessage={this.bip32PathError()}
+          bip32PathIsDefault={this.bip32PathIsDefault}
+          handleBIP32PathChange={this.handleBIP32PathChange}
+          resetBIP32Path={resetBIP32Path}
+          onReceive={this.onReceive}
+          interaction={this.interaction()}
+          disableChangeMethod={disableChangeMethod}
+          extendedPublicKeyImporter={extendedPublicKeyImporter}
+        />
+        <InteractionMessages
+          messages={this.interaction().messagesFor({ state: status })}
+          excludeCodes={["bip32"]}
+        />
         <FormHelperText error>{extendedPublicKeyError}</FormHelperText>
       </FormGroup>
     );

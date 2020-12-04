@@ -4,6 +4,7 @@ import {
   PENDING,
   UNSUPPORTED,
   SignMultisigTransaction,
+  ACTIVE,
 } from "unchained-wallets";
 import {
   Grid,
@@ -193,6 +194,7 @@ class IndirectSignatureImporter extends React.Component {
               onReceive={this.onReceive}
               onReceivePSBT={this.onReceivePSBT}
               interaction={this.interaction()}
+              setActive={this.setActive}
               disableChangeMethod={disableChangeMethod}
               extendedPublicKeyImporter={extendedPublicKeyImporter}
             />
@@ -206,6 +208,10 @@ class IndirectSignatureImporter extends React.Component {
         </Box>
       </Box>
     );
+  };
+
+  setActive = () => {
+    this.setState({ status: ACTIVE });
   };
 
   onReceive = (signature) => {
