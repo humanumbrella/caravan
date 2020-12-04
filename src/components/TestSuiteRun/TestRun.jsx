@@ -109,7 +109,7 @@ class TestRunBase extends React.Component {
               <Box align="center">
                 <ColdcardJSONReader
                   interaction={test.interaction()}
-                  onSuccess={this.startParse}
+                  onReceive={this.startParse}
                   onStart={this.start}
                   setError={this.reset}
                   fileType="JSON"
@@ -127,7 +127,7 @@ class TestRunBase extends React.Component {
                 />
                 <ColdcardPSBTReader
                   interaction={test.interaction()}
-                  onSuccess={this.startParse}
+                  onReceivePSBT={this.startParse}
                   onStart={this.start}
                   setError={this.reset}
                   fileType="PSBT"

@@ -24,7 +24,6 @@ import {
 } from "@material-ui/core";
 import Copyable from "../Copyable";
 import DirectExtendedPublicKeyImporter from "./DirectExtendedPublicKeyImporter";
-import IndirectExtendedPublicKeyImporter from "./IndirectExtendedPublicKeyImporter";
 import TextExtendedPublicKeyImporter from "./TextExtendedPublicKeyImporter";
 import EditableName from "../EditableName";
 import Conflict from "../CreateAddress/Conflict";
@@ -37,6 +36,8 @@ import {
   setExtendedPublicKeyImporterExtendedPublicKeyRootFingerprint,
   setExtendedPublicKeyImporterFinalized,
 } from "../../actions/extendedPublicKeyImporterActions";
+import ColdcardExtendedPublicKeyImporter from "../Coldcard/ColdcardExtendedPublicKeyImporter";
+import HermitExtendedPublicKeyImporter from "../Hermit/HermitExtendedPublicKeyImporter";
 
 const TEXT = "text";
 const UNKNOWN = "unknown";
@@ -123,9 +124,9 @@ class ExtendedPublicKeyImporter extends React.Component {
         />
       );
     }
-    if (method === HERMIT || method === COLDCARD) {
+    if (method === HERMIT) {
       return (
-        <IndirectExtendedPublicKeyImporter
+        <HermitExtendedPublicKeyImporter
           extendedPublicKeyImporter={extendedPublicKeyImporter}
           validateAndSetExtendedPublicKey={this.validateAndSetExtendedPublicKey}
           validateAndSetBIP32Path={this.validateAndSetBIP32Path}
@@ -140,7 +141,19 @@ class ExtendedPublicKeyImporter extends React.Component {
         />
       );
     }
-    if (extendedPublicKeyImporter.method === TEXT) {
+    if (method === COLDCARD) {
+      return (
+        <ColdcardExtendedPublicKeyImporter
+          extendedPublicKeyImporter={extendedPublicKeyImporter}
+          validateAndSetExtendedPublicKey={this.validateAndSetExtendedPublicKey}
+          validateAndSetBIP32Path={this.validateAndSetBIP32Path}
+          validateAndSetRootFingerprint={this.validateAndSetRootFingerprint}
+          addressType={addressType}
+          network={network}
+        />
+      );
+    }
+    if (method === TEXT) {
       return (
         <TextExtendedPublicKeyImporter
           extendedPublicKeyImporter={extendedPublicKeyImporter}

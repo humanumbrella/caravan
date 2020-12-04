@@ -23,7 +23,6 @@ import {
 import Copyable from "../Copyable";
 import TextSignatureImporter from "./TextSignatureImporter";
 import DirectSignatureImporter from "./DirectSignatureImporter";
-import IndirectSignatureImporter from "./IndirectSignatureImporter";
 import EditableName from "../EditableName";
 import {
   setSignatureImporterName,
@@ -36,6 +35,8 @@ import {
 } from "../../actions/signatureImporterActions";
 import "react-table/react-table.css";
 import { setSigningKey as setSigningKeyAction } from "../../actions/transactionActions";
+import HermitSignatureImporter from "../Hermit/HermitSignatureImporter";
+import ColdcardSignatureImporter from "../Coldcard/ColdcardSignatureImporter";
 
 const TEXT = "text";
 const UNKNOWN = "unknown";
@@ -165,9 +166,9 @@ class SignatureImporter extends React.Component {
         />
       );
     }
-    if (method === HERMIT || method === COLDCARD) {
+    if (method === HERMIT) {
       return (
-        <IndirectSignatureImporter
+        <HermitSignatureImporter
           network={network}
           signatureImporter={signatureImporter}
           inputs={inputs}
@@ -181,6 +182,20 @@ class SignatureImporter extends React.Component {
           validateAndSetSignature={this.validateAndSetSignature}
           enableChangeMethod={this.enableChangeMethod}
           disableChangeMethod={this.disableChangeMethod}
+        />
+      );
+    }
+    if (method === COLDCARD) {
+      return (
+        <ColdcardSignatureImporter
+          network={network}
+          signatureImporter={signatureImporter}
+          inputs={inputs}
+          outputs={outputs}
+          inputsTotalSats={inputsTotalSats}
+          fee={fee}
+          extendedPublicKeyImporter={extendedPublicKeyImporter}
+          validateAndSetSignature={this.validateAndSetSignature}
         />
       );
     }

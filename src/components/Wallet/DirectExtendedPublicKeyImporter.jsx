@@ -21,7 +21,6 @@ class DirectExtendedPublicKeyImporter extends React.Component {
     super(props);
     this.state = {
       extendedPublicKeyError: "",
-      bip32PathError: "",
       status: this.interaction().isSupported() ? PENDING : UNSUPPORTED,
     };
   }
@@ -96,11 +95,8 @@ class DirectExtendedPublicKeyImporter extends React.Component {
         </Box>
         <InteractionMessages
           messages={interaction.messagesFor({ state: status })}
-          excludeCodes={["bip32"]}
         />
-        <FormHelperText className="text-danger">
-          {extendedPublicKeyError}
-        </FormHelperText>
+        <FormHelperText error>{extendedPublicKeyError}</FormHelperText>
       </Box>
     );
   };
@@ -128,27 +124,20 @@ class DirectExtendedPublicKeyImporter extends React.Component {
       console.error(e);
       this.setState({ extendedPublicKeyError: e.message, status: PENDING });
     }
-
     enableChangeMethod();
   };
 
   hasBIP32PathError = () => {
-    const { bip32PathError, status } = this.state;
-    return (
-      bip32PathError !== "" ||
-      this.interaction().hasMessagesFor({
-        state: status,
-        level: ERROR,
-        code: "bip32",
-      })
-    );
+    const { status } = this.state;
+    return this.interaction().hasMessagesFor({
+      state: status,
+      level: ERROR,
+      code: "bip32",
+    });
   };
 
   bip32PathError = () => {
-    const { bip32PathError, status } = this.state;
-    if (bip32PathError !== "") {
-      return bip32PathError;
-    }
+    const { status } = this.state;
     return this.interaction().messageTextFor({
       state: status,
       level: ERROR,
@@ -156,14 +145,14 @@ class DirectExtendedPublicKeyImporter extends React.Component {
     });
   };
 
-  setBIP32PathError = (value) => {
-    this.setState({ bip32PathError: value });
-  };
-
   handleBIP32PathChange = (event) => {
     const { validateAndSetBIP32Path } = this.props;
     const bip32Path = event.target.value;
-    validateAndSetBIP32Path(bip32Path, () => {}, this.setBIP32PathError);
+    validateAndSetBIP32Path(
+      bip32Path,
+      () => {},
+      () => {}
+    );
   };
 
   bip32PathIsDefault = () => {
@@ -173,7 +162,6 @@ class DirectExtendedPublicKeyImporter extends React.Component {
 
   resetBIP32Path = () => {
     const { resetBIP32Path } = this.props;
-    this.setBIP32PathError("");
     resetBIP32Path();
   };
 }

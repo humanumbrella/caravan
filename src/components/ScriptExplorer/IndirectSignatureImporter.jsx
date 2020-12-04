@@ -1,13 +1,9 @@
 import React from "react";
 import PropTypes from "prop-types";
 import {
-  COLDCARD,
-  HERMIT,
   PENDING,
   UNSUPPORTED,
   SignMultisigTransaction,
-  ConfigAdapter,
-  ACTIVE,
 } from "unchained-wallets";
 import {
   Grid,
@@ -20,16 +16,12 @@ import {
   TableRow,
   TableCell,
   TableBody,
+  FormGroup,
 } from "@material-ui/core";
 import { HermitReader } from "../Hermit";
 import { HermitDisplayer } from "../Hermit";
 import InteractionMessages from "../InteractionMessages";
-import { ColdcardPSBTReader, ColdcardSigningButtons } from "../Coldcard";
 import { satoshisToBitcoins } from "unchained-bitcoin";
-import { downloadFile } from "../../utils";
-import { connect } from "react-redux";
-import moment from "moment";
-import { getWalletDetailsText } from "../../selectors/wallet";
 
 class IndirectSignatureImporter extends React.Component {
   constructor(props) {
@@ -57,40 +49,6 @@ class IndirectSignatureImporter extends React.Component {
       outputs,
       bip32Paths,
     });
-  };
-
-  handlePSBTDownloadClick = () => {
-    const { walletName } = this.props;
-    const interaction = this.interaction();
-    let body = interaction.request().toBase64();
-    const timestamp = moment().format("HHmm");
-    const filename = `${timestamp}-${walletName}.psbt`;
-    downloadFile(body, filename);
-    this.setState({ status: ACTIVE });
-  };
-
-  handleWalletConfigDownloadClick = () => {
-    const { walletDetailsText } = this.props;
-    this.reshapeConfig(walletDetailsText);
-  };
-
-  // This tries to reshape it to a Coldcard Wallet Config via unchained-wallets
-  reshapeConfig = (walletDetails) => {
-    const walletConfig = JSON.parse(walletDetails);
-    const startingAddressIndex = walletConfig.startingAddressIndex;
-    // If this is a config that's been rekeyed, note that in the name.
-    walletConfig.name =
-      startingAddressIndex === 0
-        ? walletConfig.name
-        : `${walletConfig.name}_${startingAddressIndex.toString()}`;
-
-    let interaction = ConfigAdapter({
-      KEYSTORE: COLDCARD,
-      jsonConfig: walletConfig,
-    });
-    let body = interaction.adapt();
-    const filename = `wc-${walletConfig.name}.txt`;
-    downloadFile(body, filename);
   };
 
   renderDeviceConfirmInfo = () => {
@@ -164,30 +122,6 @@ class IndirectSignatureImporter extends React.Component {
     );
   };
 
-  renderColdcardSigning = () => {
-    const { status } = this.state;
-    const interaction = this.interaction();
-    return (
-      <div>
-        {this.renderDeviceConfirmInfo()}
-        <ColdcardSigningButtons
-          handlePSBTDownloadClick={this.handlePSBTDownloadClick}
-          handleWalletConfigDownloadClick={this.handleWalletConfigDownloadClick}
-        />
-        <ColdcardPSBTReader
-          onSuccess={this.handlePSBTSignatureSubmission}
-          setError={this.setError}
-          fileType="PSBT"
-          validFileFormats=".psbt"
-        />
-        <InteractionMessages
-          messages={interaction.messagesFor({ state: status })}
-          excludeCodes={["bip32"]}
-        />
-      </div>
-    );
-  };
-
   renderTextSigning = () => {
     const { signatureImporter, resetBIP32Path } = this.props;
     const { bip32PathError, status } = this.state;
@@ -228,7 +162,11 @@ class IndirectSignatureImporter extends React.Component {
   };
 
   render = () => {
-    const { signatureImporter, extendedPublicKeyImporter } = this.props;
+    const {
+      disableChangeMethod,
+      extendedPublicKeyImporter,
+      Signer,
+    } = this.props;
     const { signatureError, status } = this.state;
     const interaction = this.interaction();
     if (status === UNSUPPORTED) {
@@ -247,26 +185,41 @@ class IndirectSignatureImporter extends React.Component {
           this.renderTextSigning()}
 
         <Box mt={2}>
-          {signatureImporter.method === HERMIT
-            ? this.renderHermitSigning()
-            : this.renderColdcardSigning()}
+          {this.renderDeviceConfirmInfo()}
+          <FormGroup>
+            <Signer
+              setError={this.setError}
+              hasError={this.hasBIP32PathError()}
+              onReceive={this.onReceive}
+              onReceivePSBT={this.onReceivePSBT}
+              interaction={this.interaction()}
+              disableChangeMethod={disableChangeMethod}
+              extendedPublicKeyImporter={extendedPublicKeyImporter}
+            />
 
-          <FormHelperText error>{signatureError}</FormHelperText>
+            <FormHelperText error>{signatureError}</FormHelperText>
+
+            <InteractionMessages
+              messages={interaction.messagesFor({ state: status })}
+            />
+          </FormGroup>
         </Box>
       </Box>
     );
   };
 
-  import = (signature) => {
+  onReceive = (signature) => {
     const { validateAndSetSignature, enableChangeMethod } = this.props;
     this.setState({ signatureError: "" });
-    enableChangeMethod();
+    if (enableChangeMethod) {
+      enableChangeMethod();
+    }
     validateAndSetSignature(signature, (signatureError) => {
       this.setState({ signatureError });
     });
   };
 
-  handlePSBTSignatureSubmission = (data) => {
+  onReceivePSBT = (data) => {
     const { validateAndSetSignature } = this.props;
     try {
       // signatureData is one or more sets of signatures that are keyed
@@ -330,24 +283,12 @@ IndirectSignatureImporter.propTypes = {
   signatureImporter: PropTypes.shape({
     bip32Path: PropTypes.string,
   }).isRequired,
-  resetBIP32Path: PropTypes.func.isRequired,
-  defaultBIP32Path: PropTypes.string.isRequired,
-  validateAndSetBIP32Path: PropTypes.func.isRequired,
+  resetBIP32Path: PropTypes.func,
+  defaultBIP32Path: PropTypes.string,
+  validateAndSetBIP32Path: PropTypes.func,
   validateAndSetSignature: PropTypes.func.isRequired,
-  enableChangeMethod: PropTypes.func.isRequired,
-  disableChangeMethod: PropTypes.func.isRequired,
+  enableChangeMethod: PropTypes.func,
+  disableChangeMethod: PropTypes.func,
 };
 
-function mapStateToProps(state) {
-  return {
-    walletName: state.wallet.common.walletName,
-    walletDetailsText: getWalletDetailsText(state),
-  };
-}
-
-const mapDispatchToProps = {};
-
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(IndirectSignatureImporter);
+export default IndirectSignatureImporter;

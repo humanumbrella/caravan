@@ -7,14 +7,13 @@ import styles from "./ColdcardFileReader.module.scss";
 
 class ColdcardFileReaderBase extends Component {
   static propTypes = {
-    onSuccess: PropTypes.func.isRequired,
+    onReceive: PropTypes.func,
+    onReceivePSBT: PropTypes.func,
     setError: PropTypes.func,
-    maxFileSize: PropTypes.number,
-    validFileFormats: PropTypes.string.isRequired,
   };
 
   static defaultProps = {
-    maxFileSize: 2097152, // 2MB
+    maxFileSize: 1048576, // 1MB
   };
 
   constructor(props) {
@@ -60,14 +59,16 @@ class ColdcardFileReaderBase extends Component {
   };
 
   onDrop = (acceptedFiles, rejectedFiles) => {
-    const { onSuccess, setError } = this.props;
+    const { onReceive, onReceivePSBT, setError } = this.props;
     const { fileType } = this.state;
     const stateUpdate = { acceptedFiles, rejectedFiles };
     if (this.singleAcceptedFile(acceptedFiles, rejectedFiles)) {
       const file = acceptedFiles[0];
       const reader = new FileReader();
       reader.onload = () => {
-        onSuccess(reader.result);
+        fileType === "JSON"
+          ? onReceive(reader.result)
+          : onReceivePSBT(reader.result);
       };
       this.setState(stateUpdate, () => reader.readAsText(file));
     } else {
@@ -83,5 +84,16 @@ class ColdcardFileReaderBase extends Component {
   };
 }
 
-export const ColdcardJSONReader = ColdcardFileReaderBase;
-export const ColdcardPSBTReader = ColdcardFileReaderBase;
+export class ColdcardJSONReader extends ColdcardFileReaderBase {
+  static defaultProps = {
+    fileType: "JSON",
+    validFileFormats: ".json",
+  };
+}
+
+export class ColdcardPSBTReader extends ColdcardFileReaderBase {
+  static defaultProps = {
+    fileType: "PSBT",
+    validFileFormats: ".psbt",
+  };
+}
