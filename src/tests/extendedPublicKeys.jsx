@@ -31,13 +31,22 @@ class ExportExtendedPublicKeyTest extends Test {
       keystore: this.params.keystore,
       network: this.params.network,
       bip32Path: this.params.bip32Path,
+      includeXFP: true,
     });
   }
 
   expected() {
-    if (this.params.network === MAINNET)
-      return TEST_FIXTURES.keys.open_source.nodes[this.params.bip32Path].xpub;
-    return TEST_FIXTURES.keys.open_source.nodes[this.params.bip32Path].tpub;
+    const {
+      xpub,
+      tpub,
+      rootFingerprint,
+    } = TEST_FIXTURES.keys.open_source.nodes[this.params.bip32Path];
+
+    if (this.params.network === MAINNET || this.params.keystore === TREZOR)
+      return { xpub, rootFingerprint };
+    if (this.params.keystore === LEDGER || this.params.keystore === COLDCARD)
+      return { xpub: tpub, rootFingerprint };
+    else return { tpub, rootFingerprint };
   }
 }
 

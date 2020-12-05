@@ -151,16 +151,6 @@ Derivation: ${test.params.derivation}
               </Box>
             )}
             {this.renderInteractionMessages()}
-            {keystore.type === HERMIT &&
-              test.interaction().displayer &&
-              status === PENDING && (
-                <Box align="center">
-                  <HermitDisplayer
-                    width={400}
-                    string={test.interaction().request()}
-                  />
-                </Box>
-              )}
             {status === PENDING &&
               !Object.values(INDIRECT_KEYSTORES).includes(keystore.type) && (
                 <Box align="center">
@@ -171,6 +161,16 @@ Derivation: ${test.params.derivation}
                   >
                     Start Test
                   </Button>
+                </Box>
+              )}
+            {keystore.type === HERMIT &&
+              test.interaction().displayer &&
+              status === PENDING && (
+                <Box align="center">
+                  <HermitDisplayer
+                    width={400}
+                    string={test.interaction().request()}
+                  />
                 </Box>
               )}
             {keystore.type === HERMIT && !this.testComplete() && (
@@ -300,9 +300,8 @@ Derivation: ${test.params.derivation}
     endTestRun(testRunIndex, result.status, this.formatMessage(result));
   };
 
-  reset = (errorMessage) => {
-    const { testRunIndex, resetTestRun, setErrorNotification } = this.props;
-    if (errorMessage) setErrorNotification(errorMessage);
+  reset = () => {
+    const { testRunIndex, resetTestRun } = this.props;
     resetTestRun(testRunIndex);
   };
 
