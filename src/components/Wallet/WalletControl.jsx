@@ -31,13 +31,11 @@ class WalletControl extends React.Component {
           textColor="primary"
           variant="fullWidth"
         >
-          {this.addressesAreLoaded() && (
-            <>
-              <Tab label="Addresses" value={WALLET_MODES.VIEW} />
-              <Tab label="Receive" value={WALLET_MODES.DEPOSIT} />
-              <Tab label="Send" value={WALLET_MODES.SPEND} />
-            </>
-          )}
+          {this.addressesAreLoaded() && [
+            <Tab label="Addresses" value={WALLET_MODES.VIEW} key={0} />,
+            <Tab label="Receive" value={WALLET_MODES.DEPOSIT} key={1} />,
+            <Tab label="Send" value={WALLET_MODES.SPEND} key={2} />,
+          ]}
         </Tabs>
         <Box mt={2}>{this.renderModeComponent()}</Box>
       </div>
