@@ -460,7 +460,7 @@ class CreateWallet extends React.Component {
     const { refreshing, generating } = this.state;
     const walletLoadError =
       change.fetchUTXOsErrors + deposits.fetchUTXOsErrors > 0
-        ? "Wallet loaded with errors"
+        ? "Wallet loaded, but with errors..."
         : "";
 
     return (
@@ -501,7 +501,10 @@ class CreateWallet extends React.Component {
           </Grid>
         </Box>
         {walletLoadError.length ? (
-          <FormHelperText style={{ float: "right", padding: "11px" }} error>
+          <FormHelperText
+            style={{ float: "right", padding: "11px", fontSize: "1.5em" }}
+            error
+          >
             {walletLoadError}
           </FormHelperText>
         ) : (
