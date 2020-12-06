@@ -10,7 +10,7 @@ import {
   Tooltip,
 } from "@material-ui/core";
 import MuiButton from "@material-ui/core/Button";
-import {withStyles} from '@material-ui/styles';
+import { withStyles } from "@material-ui/styles";
 
 import CircularProgress from "@material-ui/core/CircularProgress";
 import {
@@ -41,16 +41,16 @@ const useStyles = makeStyles(() => ({
 const Button = withStyles({
   root: {
     "&.Mui-disabled": {
-      pointerEvents: "auto"
-    }
-  }
+      pointerEvents: "auto",
+    },
+  },
 })(MuiButton);
 
 const ButtonWithTooltip = ({ tooltipText, disabled, onClick, ...other }) => {
   const adjustedButtonProps = {
     disabled: disabled,
     component: disabled ? "div" : undefined,
-    onClick: disabled ? undefined : onClick
+    onClick: disabled ? undefined : onClick,
   };
   return (
     <Tooltip title={tooltipText}>
@@ -105,6 +105,7 @@ const WalletActionsPanel = ({
               </ButtonWithTooltip>
               <ButtonWithTooltip
                 tooltipText="Only clears the wallet config from browser sessions. Funds remain unaffected."
+                disabled={!walletActivated}
                 startIcon={<ExitToAppOutlined />}
                 onClick={handleClearClick}
               >
@@ -112,7 +113,7 @@ const WalletActionsPanel = ({
               </ButtonWithTooltip>
             </ButtonGroup>
           </Grid>
-          {client.type === "private" && (
+          {client.type === "private" && walletActivated && (
             <Grid item>
               <ImportAddressesButton
                 addresses={addresses}
