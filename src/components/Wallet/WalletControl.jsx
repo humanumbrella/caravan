@@ -31,9 +31,13 @@ class WalletControl extends React.Component {
           textColor="primary"
           variant="fullWidth"
         >
-          <Tab label="Addresses" value={WALLET_MODES.VIEW} />
-          <Tab label="Receive" value={WALLET_MODES.DEPOSIT} />
-          <Tab label="Send" value={WALLET_MODES.SPEND} />
+          {this.addressesAreLoaded() && (
+            <>
+              <Tab label="Addresses" value={WALLET_MODES.VIEW} />
+              <Tab label="Receive" value={WALLET_MODES.DEPOSIT} />
+              <Tab label="Send" value={WALLET_MODES.SPEND} />
+            </>
+          )}
         </Tabs>
         <Box mt={2}>{this.renderModeComponent()}</Box>
       </div>
@@ -43,12 +47,10 @@ class WalletControl extends React.Component {
   renderModeComponent = () => {
     const { walletMode, addNode, updateNode } = this.props;
     if (this.addressesAreLoaded()) {
-      if (walletMode === WALLET_MODES.DEPOSIT)
-        return <WalletDeposit />;
+      if (walletMode === WALLET_MODES.DEPOSIT) return <WalletDeposit />;
       if (walletMode === WALLET_MODES.SPEND)
         return <WalletSpend addNode={addNode} updateNode={updateNode} />;
-      if (walletMode === WALLET_MODES.VIEW)
-        return <SlicesTableContainer />;
+      if (walletMode === WALLET_MODES.VIEW) return <SlicesTableContainer />;
       return "";
     }
     const progress = this.progress();
@@ -66,10 +68,12 @@ class WalletControl extends React.Component {
   addressesAreLoaded = () => {
     const { change, deposits, nodesLoaded } = this.props;
     if (nodesLoaded) return true;
-    return (deposits.trailingEmptyNodes >= MAX_TRAILING_EMPTY_NODES ||
-      deposits.fetchUTXOsErrors >= MAX_FETCH_UTXOS_ERRORS) &&
+    return (
+      (deposits.trailingEmptyNodes >= MAX_TRAILING_EMPTY_NODES ||
+        deposits.fetchUTXOsErrors >= MAX_FETCH_UTXOS_ERRORS) &&
       (change.trailingEmptyNodes >= MAX_TRAILING_EMPTY_NODES ||
-        change.fetchUTXOsErrors >= MAX_FETCH_UTXOS_ERRORS);
+        change.fetchUTXOsErrors >= MAX_FETCH_UTXOS_ERRORS)
+    );
   };
 
   handleModeChange = (_event, mode) => {
