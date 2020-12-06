@@ -382,7 +382,9 @@ class WalletGenerator extends React.Component {
                   This config does not contain client information. Please choose
                   a client to connect to before importing your wallet.
                 </Typography>
-                <ClientPicker />
+                <ClientPicker
+                  onSuccess={() => this.setState({ connectSuccess: true })}
+                />
               </Box>
             )}
             {client.type === "private" && !unknownClient && (
@@ -443,10 +445,7 @@ class WalletGenerator extends React.Component {
               variant="contained"
               color="primary"
               onClick={this.generate}
-              disabled={
-                (client.type === "private" && !connectSuccess) ||
-                client.type === "unknown"
-              }
+              disabled={client.type !== "public" && !connectSuccess}
             >
               Confirm
             </Button>

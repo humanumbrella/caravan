@@ -93,10 +93,13 @@ class ClientPicker extends React.Component {
   };
 
   testConnection = async () => {
-    const { network, client } = this.props;
+    const { network, client, onSuccess } = this.props;
     this.setState({ connectError: "", connectSuccess: false });
     try {
       await fetchFeeEstimate(network, client);
+      if (onSuccess) {
+        onSuccess();
+      }
       this.setState({ connectSuccess: true });
     } catch (e) {
       this.setState({ connectError: e.message });
