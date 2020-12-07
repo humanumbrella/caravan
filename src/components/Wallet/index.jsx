@@ -140,23 +140,33 @@ class CreateWallet extends React.Component {
         return "";
       },
       xpub: (xpub) => validateExtendedPublicKey(xpub, tmpNetwork),
-      method: (method, index) =>
-        // eslint-disable-next-line no-bitwise
-        ~[
-          "trezor",
-          "coldcard",
-          "ledger",
-          "hermit",
-          "xpub",
-          "text",
-          undefined,
-        ].indexOf(method)
-          ? ""
-          : `Invalid method for extended public key ${index}`,
+      method: (method, index) => {
+        if (
+          [
+            "trezor",
+            "coldcard",
+            "ledger",
+            "hermit",
+            "xpub",
+            "text",
+            undefined,
+          ].includes(method)
+        ) {
+          return "";
+        } else {
+          return `Invalid method for extended public key ${index}`;
+        }
+      },
     };
 
     const keys = Object.keys(xpubFields);
+    const seen = [];
     for (let xpubIndex = 0; xpubIndex < xpubs.length; xpubIndex += 1) {
+      if (!seen.includes(xpubs[xpubIndex].xpub)) {
+        seen.push(xpubs[xpubIndex].xpub);
+      } else {
+        return "Duplicate xpub found.";
+      }
       for (let keyIndex = 0; keyIndex < keys.length; keyIndex += 1) {
         const key = keys[keyIndex];
         const value = xpubs[xpubIndex][key];
@@ -193,7 +203,9 @@ class CreateWallet extends React.Component {
       configError = "Invalid JSON";
     }
 
-    if (sessionStorage) sessionStorage.setItem(CARAVAN_CONFIG, configJson);
+    if (sessionStorage && configError === "") {
+      sessionStorage.setItem(CARAVAN_CONFIG, configJson);
+    }
 
     // async since importDetails needs the updated state for it to work
     this.setState({ configJson, configError }, () => {
@@ -211,11 +223,15 @@ class CreateWallet extends React.Component {
   handleImport = ({ target }) => {
     const fileReader = new FileReader();
 
-    fileReader.readAsText(target.files[0]);
-    fileReader.onload = (event) => {
-      const configJson = event.target.result;
-      this.setConfigJson(configJson);
-    };
+    if (target.files[0] && target.files[0].size < 1048576) {
+      fileReader.onload = (event) => {
+        const configJson = event.target.result;
+        this.setConfigJson(configJson);
+      };
+      fileReader.readAsText(target.files[0]);
+    } else {
+      this.setState({ configError: "Problem uploading file." });
+    }
   };
 
   refresh = async () => {
