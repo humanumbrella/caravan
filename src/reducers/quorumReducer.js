@@ -89,7 +89,10 @@ function updateExtendedPublicKeyImporterState(state, action, field) {
   );
   if (
     importCount === Object.keys(newState.extendedPublicKeyImporters).length &&
-    field === "finalized"
+    field === "finalized" &&
+    Object.values(newState.extendedPublicKeyImporters).every(
+      (xpub) => !xpub.conflict
+    )
   ) {
     newState.configuring = false;
   }

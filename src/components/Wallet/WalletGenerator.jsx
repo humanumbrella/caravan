@@ -210,7 +210,7 @@ class WalletGenerator extends React.Component {
       addressType,
       extendedPublicKeys,
       requiredSigners,
-      index,
+      index
     );
     const multisig = deriveMultisigByPath(braid, bip32Path);
 
@@ -351,112 +351,127 @@ class WalletGenerator extends React.Component {
       downloadWalletDetails,
       client,
       generating,
+      extendedPublicKeyImporters,
     } = this.props;
     const { connectSuccess, unknownClient } = this.state;
+    const hasConflict = Object.values(extendedPublicKeyImporters).some(
+      (xpub) => xpub.conflict
+    );
     if (this.extendedPublicKeyCount() === totalSigners) {
       if (generating && !configuring) {
         return (
           <WalletControl addNode={this.addNode} updateNode={this.updateNode} />
         );
       }
-      return (
-        <Card>
-          <CardHeader title={this.title()} />
-          <CardContent>
-            <Button href="#" onClick={this.toggleImporters}>
-              {configuring ? "Hide Key Selection" : "Edit Details"}
-            </Button>
-            <ConfirmWallet />
-            <p>
-              You have imported all&nbsp;
-              {totalSigners} extended public keys. You will need to save this
-              information.
-            </p>
-            <WalletConfigInteractionButtons
-              onClearFn={(e) => this.toggleImporters(e)}
-              onDownloadFn={downloadWalletDetails}
-            />
-            {unknownClient && (
-              <Box my={5}>
-                <Typography variant="subtitle1">
-                  This config does not contain client information. Please choose
-                  a client to connect to before importing your wallet.
-                </Typography>
-                <ClientPicker
-                  onSuccess={() => this.setState({ connectSuccess: true })}
-                />
-              </Box>
-            )}
-            {client.type === "private" && !unknownClient && (
-              <Box my={5}>
-                <Grid container spacing={2} alignItems="center">
-                  <Grid item xs={12}>
-                    <Typography variant="subtitle1">
-                      This config uses a private client. Please enter password
-                      if not set.
-                    </Typography>
-                  </Grid>
-                  <Grid item>
-                    <TextField
-                      id="client-username"
-                      label="Username"
-                      defaultValue={client.username}
-                      InputProps={{
-                        readOnly: true,
-                        disabled: true,
-                        startAdornment: (
-                          <InputAdornment position="start">
-                            <AccountCircleIcon />
-                          </InputAdornment>
-                        ),
-                      }}
-                    />
-                  </Grid>
-                  <Grid item md={4} xs={10}>
-                    <form onSubmit={(event) => this.handlePasswordEnter(event)}>
+      if (!hasConflict) {
+        return (
+          <Card>
+            <CardHeader title={this.title()} />
+            <CardContent>
+              <Button href="#" onClick={this.toggleImporters}>
+                {configuring ? "Hide Key Selection" : "Edit Details"}
+              </Button>
+              <ConfirmWallet />
+              <p>
+                You have imported all&nbsp;
+                {totalSigners} extended public keys. You will need to save this
+                information.
+              </p>
+              <WalletConfigInteractionButtons
+                onClearFn={(e) => this.toggleImporters(e)}
+                onDownloadFn={downloadWalletDetails}
+              />
+              {unknownClient && (
+                <Box my={5}>
+                  <Typography variant="subtitle1">
+                    This config does not contain client information. Please
+                    choose a client to connect to before importing your wallet.
+                  </Typography>
+                  <ClientPicker
+                    onSuccess={() => this.setState({ connectSuccess: true })}
+                  />
+                </Box>
+              )}
+              {client.type === "private" && !unknownClient && (
+                <Box my={5}>
+                  <Grid container spacing={2} alignItems="center">
+                    <Grid item xs={12}>
+                      <Typography variant="subtitle1">
+                        This config uses a private client. Please enter password
+                        if not set.
+                      </Typography>
+                    </Grid>
+                    <Grid item>
                       <TextField
-                        id="bitcoind-password"
-                        fullWidth
-                        type="password"
-                        label="Password"
-                        placeholder="Enter bitcoind password"
-                        value={client.password}
-                        onChange={(event) => this.handlePasswordChange(event)}
-                        error={client.passwordError.length > 0}
-                        helperText={client.passwordError}
+                        id="client-username"
+                        label="Username"
+                        defaultValue={client.username}
+                        InputProps={{
+                          readOnly: true,
+                          disabled: true,
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <AccountCircleIcon />
+                            </InputAdornment>
+                          ),
+                        }}
                       />
-                      {connectSuccess && (
-                        <FormHelperText>
-                          Connection confirmed with password!
-                        </FormHelperText>
-                      )}
-                    </form>
+                    </Grid>
+                    <Grid item md={4} xs={10}>
+                      <form
+                        onSubmit={(event) => this.handlePasswordEnter(event)}
+                      >
+                        <TextField
+                          id="bitcoind-password"
+                          fullWidth
+                          type="password"
+                          label="Password"
+                          placeholder="Enter bitcoind password"
+                          value={client.password}
+                          onChange={(event) => this.handlePasswordChange(event)}
+                          error={client.passwordError.length > 0}
+                          helperText={client.passwordError}
+                        />
+                        {connectSuccess && (
+                          <FormHelperText>
+                            Connection confirmed with password!
+                          </FormHelperText>
+                        )}
+                      </form>
+                    </Grid>
                   </Grid>
-                </Grid>
-              </Box>
-            )}
-            <p>
-              Please confirm that the above information is correct and you wish
-              to generate your wallet.
-            </p>
-            <Button
-              id="confirm-wallet"
-              type="button"
-              variant="contained"
-              color="primary"
-              onClick={this.generate}
-              disabled={client.type !== "public" && !connectSuccess}
-            >
-              Confirm
-            </Button>
-          </CardContent>
-        </Card>
+                </Box>
+              )}
+              <p>
+                Please confirm that the above information is correct and you
+                wish to generate your wallet.
+              </p>
+              <Button
+                id="confirm-wallet"
+                type="button"
+                variant="contained"
+                color="primary"
+                onClick={this.generate}
+                disabled={client.type !== "public" && !connectSuccess}
+              >
+                Confirm
+              </Button>
+            </CardContent>
+          </Card>
+        );
+      }
+      return (
+        <p>
+          {`You must correct the conflict before the wallet can be generated.`}
+        </p>
       );
     }
     return (
       <p>
         {`Once you have imported all ${totalSigners} extended public keys, `}
         {"your wallet will be generated here."}
+        {hasConflict && ` You will not be able to continue until you address `}
+        {`the conflict.`}
       </p>
     );
   }
