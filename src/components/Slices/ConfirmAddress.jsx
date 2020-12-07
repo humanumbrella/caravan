@@ -23,6 +23,7 @@ import {
 import {
   TREZOR,
   LEDGER,
+  COLDCARD,
   HERMIT,
   ACTIVE,
   PENDING,
@@ -118,7 +119,8 @@ const ConfirmAddress = ({ slice, network }) => {
           value: "",
         });
       }
-      if (extendedPublicKeyImporter.method !== "unknown") {
+      // FIXME - hardcoded to just show up for trezor
+      if (extendedPublicKeyImporter.method === "trezor") {
         setInteraction(
           ConfirmMultisigAddress({
             keystore: extendedPublicKeyImporter.method,
@@ -186,7 +188,7 @@ const ConfirmAddress = ({ slice, network }) => {
   return (
     <Grid item md={12}>
       <ExtendedPublicKeySelector number={0} onChange={handleKeySelected} />
-      {state.deviceType === "unknown" && state.keySelected && (
+      {state.keySelected && (
         <form>
           <FormControl fullWidth>
             <InputLabel>Select Method</InputLabel>
@@ -198,6 +200,9 @@ const ConfirmAddress = ({ slice, network }) => {
             >
               <MenuItem value="">{"< Select method >"}</MenuItem>
               <MenuItem value={TREZOR}>Trezor</MenuItem>
+              <MenuItem value={COLDCARD} disabled>
+                Coldcard
+              </MenuItem>
               <MenuItem value={LEDGER} disabled>
                 Ledger
               </MenuItem>

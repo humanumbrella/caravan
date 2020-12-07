@@ -86,7 +86,7 @@ class SignatureImporter extends React.Component {
   };
 
   renderImport = () => {
-    const { signatureImporter, number, extendedPublicKeyImporter } = this.props;
+    const { signatureImporter, number } = this.props;
     const currentNumber = this.getCurrent();
     const notMyTurn = number > currentNumber;
     const { disableChangeMethod } = this.state;
@@ -102,29 +102,24 @@ class SignatureImporter extends React.Component {
 
     return (
       <form>
-        {(extendedPublicKeyImporter === null ||
-          typeof extendedPublicKeyImporter === "undefined" ||
-          extendedPublicKeyImporter.method === TEXT ||
-          extendedPublicKeyImporter.method === UNKNOWN) && (
-          <FormControl fullWidth>
-            <InputLabel id={labelId}>Select Method</InputLabel>
+        <FormControl fullWidth>
+          <InputLabel id={labelId}>Select Method</InputLabel>
 
-            <Select
-              labelId={labelId}
-              id={`signature-${number}-importer-select`}
-              disabled={disableChangeMethod}
-              value={signatureImporter.method}
-              onChange={this.handleMethodChange}
-            >
-              <MenuItem value={UNKNOWN}>{"< Select method >"}</MenuItem>
-              <MenuItem value={TREZOR}>Trezor</MenuItem>
-              <MenuItem value={LEDGER}>Ledger</MenuItem>
-              <MenuItem value={COLDCARD}>Coldcard</MenuItem>
-              <MenuItem value={HERMIT}>Hermit</MenuItem>
-              <MenuItem value={TEXT}>Enter as text</MenuItem>
-            </Select>
-          </FormControl>
-        )}
+          <Select
+            labelId={labelId}
+            id={`signature-${number}-importer-select`}
+            disabled={disableChangeMethod}
+            value={signatureImporter.method}
+            onChange={this.handleMethodChange}
+          >
+            <MenuItem value={UNKNOWN}>{"< Select method >"}</MenuItem>
+            <MenuItem value={TREZOR}>Trezor</MenuItem>
+            <MenuItem value={LEDGER}>Ledger</MenuItem>
+            <MenuItem value={COLDCARD}>Coldcard</MenuItem>
+            <MenuItem value={HERMIT}>Hermit</MenuItem>
+            <MenuItem value={TEXT}>Enter as text</MenuItem>
+          </Select>
+        </FormControl>
 
         {this.renderImportByMethod()}
       </form>
