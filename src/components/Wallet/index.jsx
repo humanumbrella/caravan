@@ -222,7 +222,6 @@ class CreateWallet extends React.Component {
 
   handleImport = ({ target }) => {
     const fileReader = new FileReader();
-
     if (target.files[0] && target.files[0].size < 1048576) {
       fileReader.onload = (event) => {
         const configJson = event.target.result;
@@ -238,6 +237,11 @@ class CreateWallet extends React.Component {
     this.setState({ refreshing: true });
     await this.generatorRefresh();
     this.setState({ refreshing: false });
+  };
+
+  resetErrorAndClearTargetValue = (event) => {
+    event.target.value = "";
+    this.setState({ configError: "" });
   };
 
   importDetails = () => {
@@ -334,6 +338,7 @@ class CreateWallet extends React.Component {
               name="upload-config"
               accept="application/json"
               onChange={this.handleImport}
+              onClick={this.resetErrorAndClearTargetValue}
               type="file"
             />
 
