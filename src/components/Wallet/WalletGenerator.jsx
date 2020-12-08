@@ -308,9 +308,10 @@ class WalletGenerator extends React.Component {
     }
   };
 
+  // eslint-disable-next-line class-methods-use-this
   generateRichExtendedPublicKeys(extendedPublicKeyImporters) {
     return Object.values(extendedPublicKeyImporters).map((importer) => {
-      let extendedPublicKey = ExtendedPublicKey.fromBase58(
+      const extendedPublicKey = ExtendedPublicKey.fromBase58(
         importer.extendedPublicKey
       );
       extendedPublicKey.setRootFingerprint(
@@ -321,7 +322,7 @@ class WalletGenerator extends React.Component {
       extendedPublicKey.setBip32Path(
         importer.bip32Path && importer.bip32Path.toLowerCase() !== "unknown"
           ? importer.bip32Path
-          : "m" + "/0".repeat(extendedPublicKey.depth)
+          : `m${"/0".repeat(extendedPublicKey.depth)}`
       );
       extendedPublicKey.addBase58String();
       return extendedPublicKey;
@@ -461,9 +462,7 @@ class WalletGenerator extends React.Component {
         );
       }
       return (
-        <p>
-          {`You must correct the conflict before the wallet can be generated.`}
-        </p>
+        <p>You must correct the conflict before the wallet can be generated.</p>
       );
     }
     return (

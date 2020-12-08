@@ -153,9 +153,8 @@ class CreateWallet extends React.Component {
           ].includes(method)
         ) {
           return "";
-        } else {
-          return `Invalid method for extended public key ${index}`;
         }
+        return `Invalid method for extended public key ${index}`;
       },
     };
 
@@ -240,6 +239,7 @@ class CreateWallet extends React.Component {
   };
 
   resetErrorAndClearTargetValue = (event) => {
+    // eslint-disable-next-line no-param-reassign
     event.target.value = "";
     this.setState({ configError: "" });
   };
@@ -558,7 +558,6 @@ class CreateWallet extends React.Component {
 
 CreateWallet.propTypes = {
   addressType: PropTypes.string.isRequired,
-  startingAddressIndex: PropTypes.number.isRequired,
   change: PropTypes.shape({
     balanceSats: PropTypes.shape({}),
     fetchUTXOsErrors: PropTypes.number,
@@ -605,6 +604,7 @@ CreateWallet.propTypes = {
   unknownAddresses: PropTypes.arrayOf(PropTypes.string).isRequired,
   unknownSlices: PropTypes.arrayOf(PropTypes.shape(slicePropTypes)).isRequired,
   walletName: PropTypes.string.isRequired,
+  walletDetailsText: PropTypes.string.isRequired,
 };
 
 CreateWallet.defaultProps = {

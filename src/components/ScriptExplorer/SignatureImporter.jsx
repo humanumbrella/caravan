@@ -86,7 +86,7 @@ class SignatureImporter extends React.Component {
   };
 
   renderImport = () => {
-    const { signatureImporter, number } = this.props;
+    const { signatureImporter, number, isWallet } = this.props;
     const currentNumber = this.getCurrent();
     const notMyTurn = number > currentNumber;
     const { disableChangeMethod } = this.state;
@@ -115,7 +115,9 @@ class SignatureImporter extends React.Component {
             <MenuItem value={UNKNOWN}>{"< Select method >"}</MenuItem>
             <MenuItem value={TREZOR}>Trezor</MenuItem>
             <MenuItem value={LEDGER}>Ledger</MenuItem>
-            <MenuItem value={COLDCARD}>Coldcard</MenuItem>
+            <MenuItem value={COLDCARD} disabled={!isWallet}>
+              Coldcard
+            </MenuItem>
             <MenuItem value={HERMIT}>Hermit</MenuItem>
             <MenuItem value={TEXT}>Enter as text</MenuItem>
           </Select>
@@ -302,8 +304,7 @@ class SignatureImporter extends React.Component {
       setComplete,
       network,
       outputs,
-      // setMethod,
-      // setSigningKey,
+      setSigningKey,
     } = this.props;
     if (!Array.isArray(inputsSignatures)) {
       errback("Signature is not an array of strings.");
@@ -311,18 +312,25 @@ class SignatureImporter extends React.Component {
     }
 
     if (inputsSignatures.length < inputs.length) {
-      errback("Not enough signatures (must be exactly one for each input).");
+      errback(
+        "Not enough signatures (must be at least one signature for each input)."
+      );
       return;
     }
 
     if (inputsSignatures.length % inputs.length !== 0) {
-      errback(
-        "Not the right number of signatures (must be exactly one for each input)."
-      );
+      errback("Number of signatures must be a multiple of number of inputs.");
+      return;
     }
 
     const numSignatureSets = inputsSignatures.length / inputs.length;
 
+    if (numSignatureSets > Object.values(signatureImporters).length) {
+      errback(
+        "Too many signatures. Max one set of signatures per required signer."
+      );
+      return;
+    }
     const publicKeys = [];
     if (numSignatureSets === 1) {
       const finalizedSignatureImporters = Object.values(
@@ -386,63 +394,78 @@ class SignatureImporter extends React.Component {
       });
     } else {
       // We land here if a PSBT has been uploaded with multiple signature sets.
-      // In case we already have some signatures, filter those out.
+      // In case we already have some signatures saved, e.g. first a singly-signed
+      // PSBT was uploaded, and now a doubly-signed PSBT was uploaded, filter out
+      // the known signatures.
       let signaturesToCheck = this.filterKnownSignatures(inputsSignatures);
-      let sigNumber = number; // so we can iterate, number is a const from props.
-      // At this point, either we have a multiple for sets of signatures for this
-      // transaction or we have filtered the signatures down to potentially a
-      // single set of signatures.
+      let signatureSetNumber = number; // so we can iterate, number is a const from props.
+
       while (
-        sigNumber <= Object.keys(signatureImporters).length &&
+        signatureSetNumber <= Object.keys(signatureImporters).length &&
         signaturesToCheck.length > 0
       ) {
-        // setSigningKey(sigNumber, sigNumber - 1);
-        // setMethod(sigNumber, COLDCARD);
-        let sigsToCheckThisRound = [];
-        // Loop over inputs and check sigs to see if you can find public keys.
-        // NOTE - signaturesToCheck.length could be much larger than inputs.length
-        // which is why the loop is over inputs.length
-        for (let inputIndex = 0; inputIndex < inputs.length; inputIndex += 1) {
-          const inputNumber = inputIndex + 1;
-          const inputSignature = signaturesToCheck[inputIndex];
-          sigsToCheckThisRound.push(inputSignature);
-          if (validateHex(inputSignature) !== "") {
-            errback(`Signature for input ${inputNumber} is not valid hex.`);
-            return;
-          }
+        setSigningKey(signatureSetNumber, signatureSetNumber - 1);
+        const signatureSet = [];
+        const publicKeySet = [];
 
+        // Loop over inputs and check the sigs array to see if you can find a public key or not.
+        // NOTE - signaturesToCheck.length could be much larger than inputs.length!
+        // This is *not* efficient, but it will work as a temporary solution until we refactor
+        // the signatures data structure returned from unchained-bitcoin or change how caravan
+        // validates signatures, this is a solution.
+
+        for (let inputIndex = 0; inputIndex < inputs.length; inputIndex += 1) {
           let publicKey;
-          try {
-            publicKey = validateMultisigSignature(
-              network,
-              inputs,
-              outputs,
-              inputIndex,
-              inputSignature
-            );
-          } catch (e) {
-            console.error(e);
-            errback(`Signature for input ${inputNumber} is invalid.`);
-            return;
+          for (let i = 0; i < signaturesToCheck.length; i += 1) {
+            const inputSignature = signaturesToCheck[i];
+            if (validateHex(inputSignature) !== "") {
+              errback(
+                `Signature for input at index ${inputIndex} is not valid hex.`
+              );
+              return;
+            }
+            try {
+              publicKey = validateMultisigSignature(
+                network,
+                inputs,
+                outputs,
+                inputIndex,
+                inputSignature
+              );
+            } catch (e) {
+              console.error(e);
+              // Not going to errback, because we expect to see failures
+            }
+            if (publicKey) {
+              // Found which pubkey this signature is for ... save it and the signature!
+              publicKeySet.push(publicKey);
+              signatureSet.push(inputSignature);
+              break;
+            }
           }
-          if (publicKey) {
-            publicKeys.push(publicKey);
-          } else {
-            errback(`Signature for input ${inputNumber} is invalid.`);
+          if (!publicKey) {
+            errback(`No valid signature for input ${inputIndex} found.`);
             return;
           }
         }
-        // Set the number we're on (probably 1) to Complete and include pubkeys/signatures
-        setComplete(sigNumber, {
-          signature: sigsToCheckThisRound,
-          publicKeys,
+        if (
+          publicKeySet.length !== inputs.length ||
+          signatureSet.length !== inputs.length
+        ) {
+          errback(`There was an error in validating the transaction.`);
+          return;
+        }
+        // Set the signatureSetNumber we're currently on to complete and include publicKeySet/signatureSet
+        setComplete(signatureSetNumber, {
+          signature: signatureSet,
+          publicKeySet,
           finalized: true,
         });
         // Send signatures to this method again, since now some of them are marked
         // as finalized, and they will be filtered out.
         signaturesToCheck = this.filterKnownSignatures(inputsSignatures);
         // increment which signature number we're working on next.
-        sigNumber += 1;
+        signatureSetNumber += 1;
       }
     }
   };

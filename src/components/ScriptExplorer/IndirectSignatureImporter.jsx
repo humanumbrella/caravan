@@ -19,8 +19,7 @@ import {
   TableBody,
   FormGroup,
 } from "@material-ui/core";
-import { HermitReader } from "../Hermit";
-import { HermitDisplayer } from "../Hermit";
+import { HermitReader, HermitDisplayer } from "../Hermit";
 import InteractionMessages from "../InteractionMessages";
 import { satoshisToBitcoins } from "unchained-bitcoin";
 
@@ -307,6 +306,7 @@ IndirectSignatureImporter.propTypes = {
   outputs: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   signatureImporter: PropTypes.shape({
     bip32Path: PropTypes.string,
+    method: PropTypes.string,
   }).isRequired,
   resetBIP32Path: PropTypes.func,
   defaultBIP32Path: PropTypes.string,
@@ -314,6 +314,12 @@ IndirectSignatureImporter.propTypes = {
   validateAndSetSignature: PropTypes.func.isRequired,
   enableChangeMethod: PropTypes.func,
   disableChangeMethod: PropTypes.func,
+  extendedPublicKeyImporter: PropTypes.shape({
+    method: PropTypes.string,
+  }),
+  Signer: PropTypes.shape({}),
+  fee: PropTypes.number,
+  inputsTotalSats: PropTypes.number,
 };
 
 export default IndirectSignatureImporter;
