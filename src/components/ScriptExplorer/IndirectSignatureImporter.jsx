@@ -7,10 +7,7 @@ import {
   ACTIVE,
 } from "unchained-wallets";
 import {
-  Grid,
   Box,
-  TextField,
-  Button,
   FormHelperText,
   Table,
   TableHead,
@@ -19,7 +16,6 @@ import {
   TableBody,
   FormGroup,
 } from "@material-ui/core";
-import { HermitReader, HermitDisplayer } from "../Hermit";
 import InteractionMessages from "../InteractionMessages";
 import { satoshisToBitcoins } from "unchained-bitcoin";
 
@@ -95,72 +91,6 @@ class IndirectSignatureImporter extends React.Component {
     });
   };
 
-  renderHermitSigning = () => {
-    const { disableChangeMethod } = this.props;
-    const { status } = this.state;
-    const interaction = this.interaction();
-    return (
-      <div>
-        <Grid container justify="center">
-          <Grid item>
-            <HermitDisplayer width={400} string={interaction.request()} />
-          </Grid>
-        </Grid>
-        <HermitReader
-          startText="Scan Signature QR Code"
-          interaction={interaction}
-          onStart={disableChangeMethod}
-          onSuccess={this.import}
-          onClear={this.clear}
-        />
-
-        <InteractionMessages
-          messages={interaction.messagesFor({ state: status })}
-          excludeCodes={["hermit.signature_request", "hermit.command"]}
-        />
-      </div>
-    );
-  };
-
-  renderTextSigning = () => {
-    const { signatureImporter, resetBIP32Path } = this.props;
-    const { bip32PathError, status } = this.state;
-    return (
-      <>
-        <Grid container>
-          <Grid item md={10}>
-            <TextField
-              name="bip32Path"
-              value={signatureImporter.bip32Path}
-              onChange={this.handleBIP32PathChange}
-              disabled={status !== PENDING}
-              error={this.hasBIP32PathError()}
-              helperText={bip32PathError}
-            />
-          </Grid>
-
-          <Grid item md={2}>
-            {!this.bip32PathIsDefault() && (
-              <Button
-                type="button"
-                variant="contained"
-                size="small"
-                onClick={resetBIP32Path}
-                disabled={status !== PENDING}
-              >
-                Default
-              </Button>
-            )}
-          </Grid>
-        </Grid>
-
-        <FormHelperText>
-          Use the default value if you don&rsquo;t understand BIP32 paths.
-        </FormHelperText>
-      </>
-    );
-  };
-
   render = () => {
     const {
       disableChangeMethod,
@@ -179,11 +109,6 @@ class IndirectSignatureImporter extends React.Component {
     }
     return (
       <Box mt={2}>
-        {(extendedPublicKeyImporter === null ||
-          typeof extendedPublicKeyImporter === "undefined" ||
-          extendedPublicKeyImporter.method === "text") &&
-          this.renderTextSigning()}
-
         <Box mt={2}>
           {this.renderDeviceConfirmInfo()}
           <FormGroup>
@@ -318,8 +243,8 @@ IndirectSignatureImporter.propTypes = {
     method: PropTypes.string,
   }),
   Signer: PropTypes.shape({}),
-  fee: PropTypes.number,
-  inputsTotalSats: PropTypes.number,
+  fee: PropTypes.string,
+  inputsTotalSats: PropTypes.shape({}),
 };
 
 export default IndirectSignatureImporter;

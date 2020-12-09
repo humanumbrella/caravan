@@ -1,6 +1,6 @@
 import React from "react";
 import { MAINNET, TESTNET, TEST_FIXTURES } from "unchained-bitcoin";
-import { COLDCARD, ExportPublicKey, LEDGER, TREZOR } from "unchained-wallets";
+import { COLDCARD, ExportPublicKey } from "unchained-wallets";
 
 import Test from "./Test";
 

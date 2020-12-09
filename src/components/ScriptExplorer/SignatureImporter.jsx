@@ -251,7 +251,11 @@ class SignatureImporter extends React.Component {
     const { number, setBIP32Path, isWallet } = this.props;
     if (isWallet) {
       const { extendedPublicKeyImporter } = this.props;
-      if (extendedPublicKeyImporter.method !== "text") return;
+      if (
+        extendedPublicKeyImporter &&
+        extendedPublicKeyImporter.method !== "text"
+      )
+        return;
     }
     setBIP32Path(number, this.defaultBIP32Path());
   };
@@ -425,6 +429,13 @@ class SignatureImporter extends React.Component {
               return;
             }
             try {
+              // THIS NEEDS TO BE MORE OPINIONATED ABOUT *WHICH* SIGNING DEVICE ARE THESE PUBKEYS COMING FROM
+              // e.g. after the first round of this loop if you successfully find a public key -- that public key
+              // is derived from some xpub ... and all the remaining solutions in this round of the loop should
+              // be derived from the *same* xpub. This assumption is not help if you're just blindly searching
+              // for *any* valid public key within the list of signatures. E.g. there are multiple *valid* publicKeys
+              // for every input. but if you don't pay attention to the root xpub, you will get a row of public keys
+              // not associated with any particular extended public key.
               publicKey = validateMultisigSignature(
                 network,
                 inputs,
@@ -511,7 +522,7 @@ SignatureImporter.propTypes = {
   addressType: PropTypes.string.isRequired,
   extendedPublicKeyImporter: PropTypes.shape({
     method: PropTypes.string,
-  }).isRequired,
+  }),
   fee: PropTypes.string.isRequired,
   inputs: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   inputsTotalSats: PropTypes.shape({}).isRequired,
