@@ -89,6 +89,8 @@ class Test {
       // while signatures only includes pubkeys and signatures
       const sendToResolver = actual.rootFingerprint
         ? {
+            // Either an xpub or a pubkey
+            pubkey: actual.pubkey,
             xpub: actual.xpub || actual.tpub,
             rootFingerprint: actual.rootFingerprint,
           }
