@@ -27,6 +27,7 @@ class ExportPublicKeyTest extends Test {
       keystore: this.params.keystore,
       network: this.params.network,
       bip32Path: this.params.bip32Path,
+      includeXFP: true,
     });
   }
 
@@ -34,7 +35,7 @@ class ExportPublicKeyTest extends Test {
     const { pub, rootFingerprint } = TEST_FIXTURES.keys.open_source.nodes[
       this.params.bip32Path
     ];
-    return { pub, rootFingerprint };
+    return { publicKey: pub, rootFingerprint };
   }
 }
 
