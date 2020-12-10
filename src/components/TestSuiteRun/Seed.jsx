@@ -1,7 +1,6 @@
 import React from "react";
 import { connect } from "react-redux";
 import { TEST_FIXTURES } from "unchained-bitcoin";
-
 import { Grid } from "@material-ui/core";
 import { COLDCARD } from "unchained-wallets";
 import PropTypes from "prop-types";
@@ -43,10 +42,10 @@ class SeedBase extends React.Component {
         </Grid>
         {keystore && keystore.type === COLDCARD && (
           <Grid style={{ marginTop: "2em", marginBottom: "2em" }}>
-            If using the simulator, here's a handy command with the same seed
-            phrase:
+            If using the simulator, here&pos;s a handy command with the same
+            seed phrase:
             <br />
-            <code>./simulator.py --seed '{bip39Phrase.join(" ")}'</code>
+            <code>./simulator.py --seed &pos;{bip39Phrase.join(" ")}&pos;</code>
           </Grid>
         )}
       </>
@@ -61,6 +60,10 @@ SeedBase.propTypes = {
     status: PropTypes.string,
     version: PropTypes.string,
   }),
+};
+
+SeedBase.defaultProps = {
+  keystore: null,
 };
 
 const mapStateToProps = () => {

@@ -269,9 +269,12 @@ function finalizeOutputs(state, action) {
       state.network,
       state.inputs,
       state.outputs
-    )
-    unsignedTransaction = unsignedTransactionObjectFromPSBT(unsignedTransactionPSBT);
-  } catch (e) { // probably has an input that isn't braid aware.
+    );
+    unsignedTransaction = unsignedTransactionObjectFromPSBT(
+      unsignedTransactionPSBT
+    );
+  } catch (e) {
+    // probably has an input that isn't braid aware.
     unsignedTransaction = unsignedMultisigTransaction(
       state.network,
       state.inputs,

@@ -22,9 +22,10 @@ class IndirectExtendedPublicKeyImporter extends React.Component {
   // which does not work on Coldcard, so the status will be UNSUPPORTED.
   // this gets updated almost immediately, so just fire off another isSupported()
   // to check if we're good.
-  componentDidUpdate(prevProps, prevState, snapshot) {
+  componentDidUpdate() {
     const { status } = this.state;
     if (status !== PENDING && this.interaction().isSupported()) {
+      // eslint-disable-next-line react/no-did-update-set-state
       this.setState({ status: PENDING });
     }
   }
@@ -148,12 +149,17 @@ IndirectExtendedPublicKeyImporter.propTypes = {
   }).isRequired,
   disableChangeMethod: PropTypes.func,
   network: PropTypes.string.isRequired,
-  reset: PropTypes.func,
+  Reader: PropTypes.shape({}).isRequired,
   defaultBIP32Path: PropTypes.string.isRequired,
   resetBIP32Path: PropTypes.func.isRequired,
   validateAndSetBIP32Path: PropTypes.func.isRequired,
   validateAndSetExtendedPublicKey: PropTypes.func.isRequired,
   validateAndSetRootFingerprint: PropTypes.func.isRequired,
+};
+
+IndirectExtendedPublicKeyImporter.defaultProps = {
+  enableChangeMethod: null,
+  disableChangeMethod: null,
 };
 
 export default IndirectExtendedPublicKeyImporter;

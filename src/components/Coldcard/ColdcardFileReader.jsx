@@ -1,3 +1,4 @@
+// eslint-disable-next-line max-classes-per-file
 import React, { Component } from "react";
 import PropTypes from "prop-types";
 import Dropzone from "react-dropzone";
@@ -12,23 +13,10 @@ import { CloudUpload as UploadIcon } from "@material-ui/icons";
 import styles from "./ColdcardFileReader.module.scss";
 
 class ColdcardFileReaderBase extends Component {
-  static propTypes = {
-    onReceive: PropTypes.func,
-    onReceivePSBT: PropTypes.func,
-    setError: PropTypes.func,
-  };
-
-  static defaultProps = {
-    maxFileSize: 1048576, // 1MB
-  };
-
   constructor(props) {
     super(props);
     this.state = {
-      selectedFile: null,
       fileType: props.fileType || "JSON",
-      acceptedFiles: [],
-      rejectedFiles: [],
     };
   }
 
@@ -105,40 +93,60 @@ class ColdcardFileReaderBase extends Component {
   onDrop = (acceptedFiles, rejectedFiles) => {
     const { onReceive, onReceivePSBT, setError, hasError } = this.props;
     const { fileType } = this.state;
-    const stateUpdate = { acceptedFiles, rejectedFiles };
     if (hasError) return; // do not continue if the bip32path is invalid
     if (this.singleAcceptedFile(acceptedFiles, rejectedFiles)) {
       const file = acceptedFiles[0];
       const reader = new FileReader();
-      reader.onload = () => {
+      const functionToFire =
         fileType === "JSON"
           ? onReceive(reader.result)
           : onReceivePSBT(reader.result);
-      };
-      this.setState(stateUpdate, () => reader.readAsText(file));
-    } else {
-      if (rejectedFiles.length === 1) {
-        setError(
-          `The file you attempted to upload was unacceptable. File type must be .${fileType.toLowerCase()}.`
-        );
-      } else if (rejectedFiles.length > 1) {
-        setError(`This dropzone only accepts a single file.`);
-      }
-      this.setState(stateUpdate);
+      reader.onload = () => functionToFire();
+      reader.readAsText(file);
+    } else if (rejectedFiles.length === 1) {
+      setError(
+        `The file you attempted to upload was unacceptable. File type must be .${fileType.toLowerCase()}.`
+      );
+    } else if (rejectedFiles.length > 1) {
+      setError(`This dropzone only accepts a single file.`);
     }
   };
 }
 
-export class ColdcardJSONReader extends ColdcardFileReaderBase {
-  static defaultProps = {
-    fileType: "JSON",
-    validFileFormats: ".json",
-  };
-}
+ColdcardFileReaderBase.propTypes = {
+  onReceive: PropTypes.func.isRequired,
+  onReceivePSBT: PropTypes.func.isRequired,
+  setError: PropTypes.func.isRequired,
+  fileType: PropTypes.string,
+  maxFileSize: PropTypes.number,
+  validFileFormats: PropTypes.string,
+  extendedPublicKeyImporter: PropTypes.shape({
+    bip32Path: PropTypes.string,
+  }),
+  handleBIP32PathChange: PropTypes.func.isRequired,
+  resetBIP32Path: PropTypes.func.isRequired,
+  bip32PathIsDefault: PropTypes.bool.isRequired,
+  hasError: PropTypes.bool.isRequired,
+  errorMessage: PropTypes.string.isRequired,
+  isTest: PropTypes.bool,
+};
 
-export class ColdcardPSBTReader extends ColdcardFileReaderBase {
-  static defaultProps = {
-    fileType: "PSBT",
-    validFileFormats: ".psbt",
-  };
-}
+ColdcardFileReaderBase.defaultProps = {
+  maxFileSize: 1048576, // 1MB
+  fileType: "JSON",
+  validFileFormats: "json",
+  extendedPublicKeyImporter: null,
+  isTest: false,
+};
+
+export class ColdcardJSONReader extends ColdcardFileReaderBase {}
+ColdcardJSONReader.defaultProps = {
+  fileType: "JSON",
+  validFileFormats: ".json",
+};
+
+export class ColdcardPSBTReader extends ColdcardFileReaderBase {}
+ColdcardPSBTReader.defaultProps = {
+  fileType: "PSBT",
+  validFileFormats: ".psbt",
+};

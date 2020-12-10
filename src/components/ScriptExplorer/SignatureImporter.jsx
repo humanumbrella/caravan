@@ -444,6 +444,7 @@ class SignatureImporter extends React.Component {
                 inputSignature
               );
             } catch (e) {
+              // eslint-disable-next-line no-console
               console.error(e);
               // Not going to errback, because we expect to see failures
             }
@@ -549,6 +550,11 @@ SignatureImporter.propTypes = {
   signatureImporters: PropTypes.shape({}).isRequired,
   txid: PropTypes.string.isRequired,
   unsignedTransaction: PropTypes.shape({}).isRequired,
+  setSigningKey: PropTypes.func.isRequired,
+};
+
+SignatureImporter.defaultProps = {
+  extendedPublicKeyImporter: {},
 };
 
 function mapStateToProps(state, ownProps) {

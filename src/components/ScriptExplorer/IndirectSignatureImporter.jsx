@@ -16,8 +16,8 @@ import {
   TableBody,
   FormGroup,
 } from "@material-ui/core";
-import InteractionMessages from "../InteractionMessages";
 import { satoshisToBitcoins } from "unchained-bitcoin";
+import InteractionMessages from "../InteractionMessages";
 
 class IndirectSignatureImporter extends React.Component {
   constructor(props) {
@@ -245,6 +245,18 @@ IndirectSignatureImporter.propTypes = {
   Signer: PropTypes.shape({}),
   fee: PropTypes.string,
   inputsTotalSats: PropTypes.shape({}),
+};
+
+IndirectSignatureImporter.defaultProps = {
+  resetBIP32Path: null,
+  defaultBIP32Path: "",
+  validateAndSetBIP32Path: null,
+  enableChangeMethod: null,
+  disableChangeMethod: null,
+  extendedPublicKeyImporter: {},
+  Signer: {},
+  fee: "",
+  inputsTotalSats: {},
 };
 
 export default IndirectSignatureImporter;

@@ -9,6 +9,7 @@ import {
 import Test from "./Test";
 
 class ExportExtendedPublicKeyTest extends Test {
+  // eslint-disable-next-line class-methods-use-this
   postprocess(result) {
     return result.pubkey ? result.pubkey : result;
   }
@@ -46,7 +47,7 @@ class ExportExtendedPublicKeyTest extends Test {
       return { xpub, rootFingerprint };
     if (this.params.keystore === LEDGER || this.params.keystore === COLDCARD)
       return { xpub: tpub, rootFingerprint };
-    else return { tpub, rootFingerprint };
+    return { tpub, rootFingerprint };
   }
 }
 

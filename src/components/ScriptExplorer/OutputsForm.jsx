@@ -26,7 +26,7 @@ import {
   resetOutputs as resetOutputsAction,
 } from "../../actions/transactionActions";
 import { fetchFeeEstimate } from "../../blockchain";
-import {MIN_SATS_PER_BYTE_FEE} from '../Wallet/constants';
+import { MIN_SATS_PER_BYTE_FEE } from "../Wallet/constants";
 import OutputEntry from "./OutputEntry";
 import styles from "./styles.module.scss";
 
@@ -160,8 +160,8 @@ class OutputsForm extends React.Component {
     const { setFeeRate } = this.props;
     let rate = event.target.value;
 
-    // eslint-disable-next-line use-isnan
-    if (rate === "" || parseFloat(rate, 10) === NaN || parseFloat(rate, 10) < 1)
+    // eslint-disable-next-line no-restricted-globals
+    if (rate === "" || isNaN(parseFloat(rate, 10)) || parseFloat(rate, 10) < 1)
       rate = "0";
     setFeeRate(rate);
   };
@@ -193,9 +193,12 @@ class OutputsForm extends React.Component {
       console.error(e);
       feeRateFetchError = "There was an error fetching the fee rate.";
     } finally {
-      setFeeRate(!isNaN(feeEstimate)
-        ? feeEstimate.toString()
-        : MIN_SATS_PER_BYTE_FEE.toString());
+      setFeeRate(
+        // eslint-disable-next-line no-restricted-globals
+        !isNaN(feeEstimate)
+          ? feeEstimate.toString()
+          : MIN_SATS_PER_BYTE_FEE.toString()
+      );
       this.setState({ feeRateFetchError });
     }
   };

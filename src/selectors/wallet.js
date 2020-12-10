@@ -25,16 +25,6 @@ const getClientDetails = (state) => {
   return `{
     "type": "public"
   }`;
-  };
-const getExtendedPublicKeysBIP32Paths = (state) => {
-  const totalSigners = getTotalSigners(state);
-  const extendedPublicKeyImporterBIP32Paths = [];
-  for (let i = 1; i <= totalSigners; i += 1) {
-    extendedPublicKeyImporterBIP32Paths.push(
-      `${extendedPublicKeyImporterBIP32Path(state, i)}${i < totalSigners ? "," : ""}`
-    );
-  }
-  return extendedPublicKeyImporterBIP32Paths.join("\n");
 };
 
 const extendedPublicKeyImporterBIP32Path = (state, number) => {
@@ -62,6 +52,19 @@ const extendedPublicKeyImporterBIP32Path = (state, number) => {
         "xfp" : "${rootFingerprint}",
         "method": "${extendedPublicKeyImporter.method}"
       }`;
+};
+
+const getExtendedPublicKeysBIP32Paths = (state) => {
+  const totalSigners = getTotalSigners(state);
+  const extendedPublicKeyImporterBIP32Paths = [];
+  for (let i = 1; i <= totalSigners; i += 1) {
+    extendedPublicKeyImporterBIP32Paths.push(
+      `${extendedPublicKeyImporterBIP32Path(state, i)}${
+        i < totalSigners ? "," : ""
+      }`
+    );
+  }
+  return extendedPublicKeyImporterBIP32Paths.join("\n");
 };
 
 /**
@@ -225,7 +228,8 @@ export const getWalletDetailsText = createSelector(
     getTotalSigners,
     getExtendedPublicKeysBIP32Paths,
     getStartingAddressIndex,
-  ], (
+  ],
+  (
     walletName,
     addressType,
     network,
@@ -233,8 +237,8 @@ export const getWalletDetailsText = createSelector(
     requiredSigners,
     totalSigners,
     extendedPublicKeys,
-    startingAddressIndex,
-    ) => {
+    startingAddressIndex
+  ) => {
     return `{
   "name": "${walletName}",
   "addressType": "${addressType}",

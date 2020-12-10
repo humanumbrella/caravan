@@ -8,9 +8,9 @@ import {
   Grid,
   makeStyles,
   Tooltip,
+  withStyles,
 } from "@material-ui/core";
 import MuiButton from "@material-ui/core/Button";
-import { withStyles } from "@material-ui/styles";
 
 import CircularProgress from "@material-ui/core/CircularProgress";
 import {
@@ -48,7 +48,7 @@ const Button = withStyles({
 
 const ButtonWithTooltip = ({ tooltipText, disabled, onClick, ...other }) => {
   const adjustedButtonProps = {
-    disabled: disabled,
+    disabled,
     component: disabled ? "div" : undefined,
     onClick: disabled ? undefined : onClick,
   };
@@ -57,6 +57,12 @@ const ButtonWithTooltip = ({ tooltipText, disabled, onClick, ...other }) => {
       <Button {...other} {...adjustedButtonProps} />
     </Tooltip>
   );
+};
+
+ButtonWithTooltip.propTypes = {
+  tooltipText: PropTypes.string.isRequired,
+  disabled: PropTypes.bool.isRequired,
+  onClick: PropTypes.func.isRequired,
 };
 
 const WalletActionsPanel = ({
@@ -99,6 +105,7 @@ const WalletActionsPanel = ({
               <ButtonWithTooltip
                 tooltipText="Download wallet configuration to local machine for backup. No security is lost with this, but access to this file provides anyone who has it information about balances."
                 onClick={onDownloadConfig}
+                disabled={false}
                 startIcon={<GetAppOutlined />}
               >
                 Download Configuration

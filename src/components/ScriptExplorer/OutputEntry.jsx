@@ -7,10 +7,6 @@ import {
   validateOutputAmount,
 } from "unchained-bitcoin";
 import BigNumber from "bignumber.js";
-
-// Actions
-
-// Components
 import {
   Grid,
   Tooltip,
@@ -29,8 +25,6 @@ import {
   setChangeOutputIndex,
   setMaxSpendOnOutput,
 } from "../../actions/transactionActions";
-
-// Assets
 import styles from "./styles.module.scss";
 
 class OutputEntry extends React.Component {
@@ -151,7 +145,6 @@ class OutputEntry extends React.Component {
       return true;
     }
     return amountError === "" && newAmount === new BigNumber(amount);
-
   };
 
   isBalanceable = () => !this.isNotBalanceable();

@@ -3,33 +3,31 @@ import PropTypes from "prop-types";
 import IndirectSignatureImporter from "../ScriptExplorer/IndirectSignatureImporter";
 import ColdcardSigner from "./ColdcardSigner";
 
-class ColdcardSignatureImporter extends React.Component {
-  render = () => {
-    const {
-      signatureImporter,
-      extendedPublicKeyImporter,
-      inputs,
-      outputs,
-      inputsTotalSats,
-      fee,
-      validateAndSetSignature,
-      network,
-    } = this.props;
-    return (
-      <IndirectSignatureImporter
-        network={network}
-        signatureImporter={signatureImporter}
-        inputs={inputs}
-        outputs={outputs}
-        inputsTotalSats={inputsTotalSats}
-        fee={fee}
-        extendedPublicKeyImporter={extendedPublicKeyImporter}
-        validateAndSetSignature={validateAndSetSignature}
-        Signer={ColdcardSigner}
-      />
-    );
-  };
-}
+const ColdcardSignatureImporter = (props) => {
+  const {
+    signatureImporter,
+    extendedPublicKeyImporter,
+    inputs,
+    outputs,
+    inputsTotalSats,
+    fee,
+    validateAndSetSignature,
+    network,
+  } = props;
+  return (
+    <IndirectSignatureImporter
+      network={network}
+      signatureImporter={signatureImporter}
+      inputs={inputs}
+      outputs={outputs}
+      inputsTotalSats={inputsTotalSats}
+      fee={fee}
+      extendedPublicKeyImporter={extendedPublicKeyImporter}
+      validateAndSetSignature={validateAndSetSignature}
+      Signer={ColdcardSigner}
+    />
+  );
+};
 
 ColdcardSignatureImporter.propTypes = {
   network: PropTypes.string.isRequired,
@@ -39,6 +37,9 @@ ColdcardSignatureImporter.propTypes = {
     bip32Path: PropTypes.string,
   }).isRequired,
   validateAndSetSignature: PropTypes.func.isRequired,
+  extendedPublicKeyImporter: PropTypes.func.isRequired,
+  inputsTotalSats: PropTypes.number.isRequired,
+  fee: PropTypes.string.isRequired,
 };
 
 export default ColdcardSignatureImporter;

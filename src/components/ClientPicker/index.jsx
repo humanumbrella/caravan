@@ -187,6 +187,7 @@ ClientPicker.propTypes = {
   privateNotes: PropTypes.shape({}),
   setUrl: PropTypes.func.isRequired,
   urlError: PropTypes.string,
+  onSuccess: PropTypes.func,
   setUrlError: PropTypes.func.isRequired,
   setPassword: PropTypes.func.isRequired,
   passwordError: PropTypes.string,
@@ -200,6 +201,7 @@ ClientPicker.propTypes = {
 ClientPicker.defaultProps = {
   urlError: "",
   usernameError: "",
+  onSuccess: null,
   passwordError: "",
   privateNotes: React.createElement("span"),
 };

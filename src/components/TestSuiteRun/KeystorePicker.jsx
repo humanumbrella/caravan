@@ -29,7 +29,7 @@ import { setErrorNotification as setErrorNotificationAction } from "../../action
 import { KeystoreNote } from "./Note";
 import InteractionMessages from "../InteractionMessages";
 
-const NO_VERSION_DETECTION = ['', ...Object.values(INDIRECT_KEYSTORES)];
+const NO_VERSION_DETECTION = ["", ...Object.values(INDIRECT_KEYSTORES)];
 
 class KeystorePickerBase extends React.Component {
   detectVersion = async () => {
@@ -106,7 +106,9 @@ class KeystorePickerBase extends React.Component {
 
           <Grid item md={2}>
             <Button
-              disabled={status === ACTIVE || NO_VERSION_DETECTION.includes(type)}
+              disabled={
+                status === ACTIVE || NO_VERSION_DETECTION.includes(type)
+              }
               onClick={this.detectVersion}
             >
               {status === ACTIVE ? "Detecting..." : "Detect"}

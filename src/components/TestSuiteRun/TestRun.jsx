@@ -1,7 +1,6 @@
 import React from "react";
 import { connect } from "react-redux";
 import PropTypes from "prop-types";
-
 import {
   PENDING,
   ACTIVE,
@@ -24,19 +23,19 @@ import {
   ThumbDown as FailureIcon,
   Error as ErrorIcon,
 } from "@material-ui/icons";
+import moment from "moment";
 import Test from "../../tests/Test";
-
 import * as testRunActions from "../../actions/testRunActions";
 import * as errorNotificationActions from "../../actions/errorNotificationActions";
-
 import InteractionMessages from "../InteractionMessages";
 import { TestRunNote } from "./Note";
 import { HermitReader, HermitDisplayer } from "../Hermit";
-import { ColdcardJSONReader, ColdcardPSBTReader } from "../Coldcard";
-
+import {
+  ColdcardJSONReader,
+  ColdcardPSBTReader,
+  ColdcardSigningButtons,
+} from "../Coldcard";
 import "./TestRun.css";
-import { ColdcardSigningButtons } from "../Coldcard";
-import moment from "moment";
 import { downloadFile } from "../../utils";
 
 const SPACEBAR_CODE = 32;
@@ -73,7 +72,7 @@ class TestRunBase extends React.Component {
     const { test } = this.props;
     const interaction = test.interaction();
     const nameBits = test.name().split(" ");
-    let body = interaction.request().toBase64();
+    const body = interaction.request().toBase64();
     const timestamp = moment().format("HHmm");
     const filename = `${timestamp}-${nameBits[2]}-${nameBits[1][0]}.psbt`;
     downloadFile(body, filename);
@@ -94,7 +93,7 @@ Derivation: ${test.params.derivation}
 
 `;
     // We need to loop over xpubs and output `xfp: xpub` for each
-    let xpubs = test.params.extendedPublicKeys.map(
+    const xpubs = test.params.extendedPublicKeys.map(
       (xpub) => `${xpub.rootFingerprint}: ${xpub.base58String}`
     );
     output += xpubs.join("\r\n");
@@ -128,7 +127,7 @@ Derivation: ${test.params.derivation}
                   onReceive={this.startParse}
                   onStart={this.start}
                   setError={this.reset}
-                  isTest={true}
+                  isTest
                 />
               </Box>
             )}
@@ -407,9 +406,16 @@ TestRunBase.propTypes = {
     name: PropTypes.func.isRequired,
     description: PropTypes.func.isRequired,
     interaction: PropTypes.func.isRequired,
+    params: PropTypes.shape({
+      format: PropTypes.string,
+      derivation: PropTypes.string,
+      extendedPublicKeys: PropTypes.shape([]),
+    }),
     run: PropTypes.func.isRequired,
+    runParse: PropTypes.func.isRequired,
     resolve: PropTypes.func.isRequired,
     postprocess: PropTypes.func.isRequired,
+    unsignedTransaction: PropTypes.string,
   }),
   setErrorNotification: PropTypes.func.isRequired,
   startTestRun: PropTypes.func.isRequired,
@@ -417,7 +423,10 @@ TestRunBase.propTypes = {
 };
 
 TestRunBase.defaultProps = {
-  test: {},
+  test: {
+    unsignedTransaction: "",
+    params: {},
+  },
 };
 
 export default TestRun;

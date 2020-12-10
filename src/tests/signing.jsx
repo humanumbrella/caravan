@@ -13,10 +13,12 @@ import { externalLink } from "../utils";
 import Test from "./Test";
 
 class SignMultisigTransactionTest extends Test {
+  // eslint-disable-next-line class-methods-use-this
   postprocess(result) {
     return result.signatures ? result.signatures : result;
   }
 
+  // eslint-disable-next-line class-methods-use-this
   matches(expected, actual) {
     return JSON.stringify(expected) === JSON.stringify(actual);
   }

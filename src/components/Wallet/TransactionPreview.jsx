@@ -1,8 +1,8 @@
 import React from "react";
 import PropTypes from "prop-types";
-import {connect} from 'react-redux';
+import { connect } from "react-redux";
 import BigNumber from "bignumber.js";
-import {satoshisToBitcoins} from "unchained-bitcoin";
+import { satoshisToBitcoins } from "unchained-bitcoin";
 import {
   Button,
   Box,
@@ -15,14 +15,17 @@ import {
   Grid,
 } from "@material-ui/core";
 import UnsignedTransaction from "../UnsignedTransaction";
-import {
-  setChangeOutputMultisig as setChangeOutputMultisigAction,
-} from "../../actions/transactionActions";
+import { setChangeOutputMultisig as setChangeOutputMultisigAction } from "../../actions/transactionActions";
 
 class TransactionPreview extends React.Component {
-
   componentDidMount() {
-    const {outputs, changeAddress, changeOutputIndex, changeNode, setChangeOutputMultisig} = this.props;
+    const {
+      outputs,
+      changeAddress,
+      changeOutputIndex,
+      changeNode,
+      setChangeOutputMultisig,
+    } = this.props;
     outputs.forEach((output) => {
       if (output.address === changeAddress) {
         setChangeOutputMultisig(changeOutputIndex, changeNode.multisig);
@@ -214,7 +217,9 @@ class TransactionPreview extends React.Component {
 
 TransactionPreview.propTypes = {
   changeAddress: PropTypes.string.isRequired,
-  changeNode: PropTypes.object.isRequired,
+  changeNode: PropTypes.shape({
+    multisig: PropTypes.shape({}),
+  }).isRequired,
   changeOutputIndex: PropTypes.number.isRequired,
   editTransaction: PropTypes.func.isRequired,
   fee: PropTypes.string.isRequired,
@@ -234,6 +239,6 @@ function mapStateToProps(state) {
 
 const mapDispatchToProps = {
   setChangeOutputMultisig: setChangeOutputMultisigAction,
-}
+};
 
 export default connect(mapStateToProps, mapDispatchToProps)(TransactionPreview);

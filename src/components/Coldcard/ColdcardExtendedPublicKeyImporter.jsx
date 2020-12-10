@@ -2,8 +2,8 @@ import React from "react";
 import PropTypes from "prop-types";
 import { COLDCARD } from "unchained-wallets";
 import { FormGroup, FormHelperText } from "@material-ui/core";
-import { ColdcardJSONReader } from "../Coldcard";
 import { MAINNET, P2SH } from "unchained-bitcoin";
+import { ColdcardJSONReader } from ".";
 import IndirectExtendedPublicKeyImporter from "../Wallet/IndirectExtendedPublicKeyImporter";
 
 class ColdcardExtendedPublicKeyImporter extends React.Component {
@@ -28,7 +28,7 @@ class ColdcardExtendedPublicKeyImporter extends React.Component {
     }
   };
 
-  componentDidUpdate(prevProps, prevState, snapshot) {
+  componentDidUpdate(prevProps) {
     const { validateAndSetBIP32Path, network, addressType } = this.props;
     const coldcardBIP32Path = this.getColdcardBip32Path();
 
@@ -37,6 +37,7 @@ class ColdcardExtendedPublicKeyImporter extends React.Component {
       prevProps.network !== network ||
       prevProps.addressType !== addressType
     ) {
+      // eslint-disable-next-line react/no-did-update-set-state
       this.setState({ COLDCARD_MULTISIG_BIP32_PATH: coldcardBIP32Path });
       validateAndSetBIP32Path(
         coldcardBIP32Path,
@@ -103,6 +104,8 @@ ColdcardExtendedPublicKeyImporter.propTypes = {
   validateAndSetBIP32Path: PropTypes.func.isRequired,
   validateAndSetExtendedPublicKey: PropTypes.func.isRequired,
   validateAndSetRootFingerprint: PropTypes.func.isRequired,
+  addressType: PropTypes.string.isRequired,
+  defaultBIP32Path: PropTypes.string.isRequired,
 };
 
 export default ColdcardExtendedPublicKeyImporter;

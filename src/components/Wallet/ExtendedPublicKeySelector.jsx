@@ -219,12 +219,16 @@ ExtendedPublicKeySelector.propTypes = {
   setMethod: PropTypes.func.isRequired,
   setSigningKey: PropTypes.func.isRequired,
   signatureImporters: PropTypes.shape({}).isRequired,
+  signatureImporter: PropTypes.shape({
+    finalized: PropTypes.bool,
+  }),
   signingKeys: PropTypes.arrayOf(PropTypes.number).isRequired,
   totalSigners: PropTypes.number.isRequired,
 };
 
 ExtendedPublicKeySelector.defaultProps = {
   onChange: null,
+  signatureImporter: null,
 };
 
 function mapStateToProps(state, ownProps) {

@@ -11,28 +11,31 @@ class Test {
 
   static ERROR = ERROR;
 
+  // eslint-disable-next-line class-methods-use-this
   postprocess(thing) {
     return thing;
   }
 
+  // eslint-disable-next-line class-methods-use-this
   interaction() {
     throw Error("Define the `interaction` method in your subclass of `Test`.");
   }
 
+  // eslint-disable-next-line class-methods-use-this
   matches(expected, actual) {
     if (typeof expected === "object" && typeof actual === "object") {
       return Object.keys(actual).every((key) => {
         return expected[key] === actual[key];
       });
-    } else {
-      return expected === actual;
     }
+    return expected === actual;
   }
 
   constructor(params) {
     this.params = params || {};
   }
 
+  // eslint-disable-next-line class-methods-use-this
   diff(expected, actual) {
     if (typeof expected === "string" && typeof actual === "string") {
       return diffChars(expected, actual);
@@ -48,6 +51,7 @@ class Test {
     return null;
   }
 
+  // eslint-disable-next-line class-methods-use-this
   supports() {
     return true;
   }

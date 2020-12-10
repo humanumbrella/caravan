@@ -1,16 +1,17 @@
 import React, { Component } from "react";
-import { ColdcardSigningButtons } from "./ColdcardSigningButtons";
-import { ColdcardPSBTReader } from "./ColdcardFileReader";
+import PropTypes from "prop-types";
 import moment from "moment";
-import { downloadFile } from "../../utils";
 import { COLDCARD, ConfigAdapter } from "unchained-wallets";
-import { getWalletDetailsText } from "../../selectors/wallet";
 import { connect } from "react-redux";
+import { ColdcardSigningButtons } from ".";
+import { ColdcardPSBTReader } from "./ColdcardFileReader";
+import { downloadFile } from "../../utils";
+import { getWalletDetailsText } from "../../selectors/wallet";
 
 class ColdcardSigner extends Component {
   handlePSBTDownloadClick = () => {
     const { walletName, interaction, setActive } = this.props;
-    let body = interaction.request().toBase64();
+    const body = interaction.request().toBase64();
     const timestamp = moment().format("HHmm");
     const filename = `${timestamp}-${walletName}.psbt`;
     downloadFile(body, filename);
@@ -25,18 +26,18 @@ class ColdcardSigner extends Component {
   // This tries to reshape it to a Coldcard Wallet Config via unchained-wallets
   reshapeConfig = (walletDetails) => {
     const walletConfig = JSON.parse(walletDetails);
-    const startingAddressIndex = walletConfig.startingAddressIndex;
+    const { startingAddressIndex } = walletConfig;
     // If this is a config that's been rekeyed, note that in the name.
     walletConfig.name =
       startingAddressIndex === 0
         ? walletConfig.name
         : `${walletConfig.name}_${startingAddressIndex.toString()}`;
 
-    let interaction = ConfigAdapter({
+    const interaction = ConfigAdapter({
       KEYSTORE: COLDCARD,
       jsonConfig: walletConfig,
     });
-    let body = interaction.adapt();
+    const body = interaction.adapt();
     const filename = `wc-${walletConfig.name}.txt`;
     downloadFile(body, filename);
   };
@@ -54,6 +55,15 @@ class ColdcardSigner extends Component {
     );
   };
 }
+
+ColdcardSigner.propTypes = {
+  walletName: PropTypes.string.isRequired,
+  interaction: PropTypes.func.isRequired,
+  setActive: PropTypes.func.isRequired,
+  walletDetailsText: PropTypes.string.isRequired,
+  onReceivePSBT: PropTypes.func.isRequired,
+  setError: PropTypes.func.isRequired,
+};
 
 function mapStateToProps(state) {
   return {
