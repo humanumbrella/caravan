@@ -409,13 +409,13 @@ TestRunBase.propTypes = {
     params: PropTypes.shape({
       format: PropTypes.string,
       derivation: PropTypes.string,
-      extendedPublicKeys: PropTypes.shape([]),
+      extendedPublicKeys: PropTypes.array,
     }),
     run: PropTypes.func.isRequired,
     runParse: PropTypes.func.isRequired,
     resolve: PropTypes.func.isRequired,
     postprocess: PropTypes.func.isRequired,
-    unsignedTransaction: PropTypes.string,
+    unsignedTransaction: PropTypes.func,
   }),
   setErrorNotification: PropTypes.func.isRequired,
   startTestRun: PropTypes.func.isRequired,
@@ -424,7 +424,7 @@ TestRunBase.propTypes = {
 
 TestRunBase.defaultProps = {
   test: {
-    unsignedTransaction: "",
+    unsignedTransaction: null,
     params: {},
   },
 };

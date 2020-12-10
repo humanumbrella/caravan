@@ -58,7 +58,9 @@ class ColdcardSigner extends Component {
 
 ColdcardSigner.propTypes = {
   walletName: PropTypes.string.isRequired,
-  interaction: PropTypes.func.isRequired,
+  interaction: PropTypes.shape({
+    request: PropTypes.func,
+  }).isRequired,
   setActive: PropTypes.func.isRequired,
   walletDetailsText: PropTypes.string.isRequired,
   onReceivePSBT: PropTypes.func.isRequired,

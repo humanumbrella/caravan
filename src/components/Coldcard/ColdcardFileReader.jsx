@@ -3,11 +3,11 @@ import React, { Component } from "react";
 import PropTypes from "prop-types";
 import Dropzone from "react-dropzone";
 import {
-  Grid,
   Box,
-  TextField,
   Button,
   FormHelperText,
+  Grid,
+  TextField,
 } from "@material-ui/core";
 import { CloudUpload as UploadIcon } from "@material-ui/icons";
 import styles from "./ColdcardFileReader.module.scss";
@@ -97,11 +97,12 @@ class ColdcardFileReaderBase extends Component {
     if (this.singleAcceptedFile(acceptedFiles, rejectedFiles)) {
       const file = acceptedFiles[0];
       const reader = new FileReader();
-      const functionToFire =
+      reader.onload = () => {
+        // eslint-disable-next-line no-unused-expressions
         fileType === "JSON"
           ? onReceive(reader.result)
           : onReceivePSBT(reader.result);
-      reader.onload = () => functionToFire();
+      };
       reader.readAsText(file);
     } else if (rejectedFiles.length === 1) {
       setError(
@@ -114,8 +115,8 @@ class ColdcardFileReaderBase extends Component {
 }
 
 ColdcardFileReaderBase.propTypes = {
-  onReceive: PropTypes.func.isRequired,
-  onReceivePSBT: PropTypes.func.isRequired,
+  onReceive: PropTypes.func,
+  onReceivePSBT: PropTypes.func,
   setError: PropTypes.func.isRequired,
   fileType: PropTypes.string,
   maxFileSize: PropTypes.number,
@@ -123,18 +124,25 @@ ColdcardFileReaderBase.propTypes = {
   extendedPublicKeyImporter: PropTypes.shape({
     bip32Path: PropTypes.string,
   }),
-  handleBIP32PathChange: PropTypes.func.isRequired,
-  resetBIP32Path: PropTypes.func.isRequired,
-  bip32PathIsDefault: PropTypes.bool.isRequired,
-  hasError: PropTypes.bool.isRequired,
-  errorMessage: PropTypes.string.isRequired,
+  handleBIP32PathChange: PropTypes.func,
+  resetBIP32Path: PropTypes.func,
+  bip32PathIsDefault: PropTypes.func,
+  hasError: PropTypes.bool,
+  errorMessage: PropTypes.string,
   isTest: PropTypes.bool,
 };
 
 ColdcardFileReaderBase.defaultProps = {
+  onReceive: null,
+  onReceivePSBT: null,
+  handleBIP32PathChange: null,
+  resetBIP32Path: null,
+  bip32PathIsDefault: null,
+  errorMessage: "",
+  hasError: PropTypes.bool,
   maxFileSize: 1048576, // 1MB
   fileType: "JSON",
-  validFileFormats: "json",
+  validFileFormats: ".json",
   extendedPublicKeyImporter: null,
   isTest: false,
 };

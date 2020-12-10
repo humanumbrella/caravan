@@ -149,7 +149,7 @@ IndirectExtendedPublicKeyImporter.propTypes = {
   }).isRequired,
   disableChangeMethod: PropTypes.func,
   network: PropTypes.string.isRequired,
-  Reader: PropTypes.shape({}).isRequired,
+  Reader: PropTypes.func.isRequired,
   defaultBIP32Path: PropTypes.string.isRequired,
   resetBIP32Path: PropTypes.func.isRequired,
   validateAndSetBIP32Path: PropTypes.func.isRequired,

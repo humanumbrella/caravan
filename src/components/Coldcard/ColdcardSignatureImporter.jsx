@@ -37,8 +37,8 @@ ColdcardSignatureImporter.propTypes = {
     bip32Path: PropTypes.string,
   }).isRequired,
   validateAndSetSignature: PropTypes.func.isRequired,
-  extendedPublicKeyImporter: PropTypes.func.isRequired,
-  inputsTotalSats: PropTypes.number.isRequired,
+  extendedPublicKeyImporter: PropTypes.shape({}).isRequired,
+  inputsTotalSats: PropTypes.shape({}).isRequired,
   fee: PropTypes.string.isRequired,
 };
 

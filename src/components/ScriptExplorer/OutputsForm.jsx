@@ -102,7 +102,7 @@ class OutputsForm extends React.Component {
     let total = outputs
       .map((output) => {
         let { amount } = output;
-        if (!amount || !amount.length || amount.isNaN()) amount = 0;
+        if (!amount || !amount.length || Number.isNaN(amount)) amount = 0;
         return new BigNumber(amount);
       })
       .reduce(
@@ -159,7 +159,11 @@ class OutputsForm extends React.Component {
     const { setFeeRate } = this.props;
     let rate = event.target.value;
 
-    if (rate === "" || parseFloat(rate, 10).isNaN() || parseFloat(rate, 10) < 1)
+    if (
+      rate === "" ||
+      Number.isNaN(parseFloat(rate, 10)) ||
+      parseFloat(rate, 10) < 1
+    )
       rate = "0";
     setFeeRate(rate);
   };
@@ -190,7 +194,7 @@ class OutputsForm extends React.Component {
       feeRateFetchError = "There was an error fetching the fee rate.";
     } finally {
       setFeeRate(
-        !feeEstimate.isNaN()
+        !Number.isNaN(feeEstimate)
           ? feeEstimate.toString()
           : MIN_SATS_PER_BYTE_FEE.toString()
       );
