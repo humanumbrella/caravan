@@ -23,6 +23,8 @@ import {
 import Copyable from "../Copyable";
 import TextSignatureImporter from "./TextSignatureImporter";
 import DirectSignatureImporter from "./DirectSignatureImporter";
+import HermitSignatureImporter from "../Hermit/HermitSignatureImporter";
+import ColdcardSignatureImporter from "../Coldcard/ColdcardSignatureImporter";
 import EditableName from "../EditableName";
 import {
   setSignatureImporterName,
@@ -35,8 +37,6 @@ import {
 } from "../../actions/signatureImporterActions";
 import "react-table/react-table.css";
 import { setSigningKey as setSigningKeyAction } from "../../actions/transactionActions";
-import HermitSignatureImporter from "../Hermit/HermitSignatureImporter";
-import ColdcardSignatureImporter from "../Coldcard/ColdcardSignatureImporter";
 
 const TEXT = "text";
 const UNKNOWN = "unknown";
@@ -416,10 +416,28 @@ class SignatureImporter extends React.Component {
         // NOTE - signaturesToCheck.length could be much larger than inputs.length!
         // This is *not* efficient, but it will work as a temporary solution until we refactor
         // the signatures data structure returned from unchained-bitcoin or change how caravan
-        // validates signatures, this is a solution.
+        // validates signatures.
 
+        // The "sets" of signatures that come out of this process are not all connected /  tied to the same root xpub
+        // because we've truncated a little information in the psbt parsing => signature return process
+        // We can re-generate that information later but for now this should work. There are
+        // bugs in edge cases that need to be handled better.
         for (let inputIndex = 0; inputIndex < inputs.length; inputIndex += 1) {
           let publicKey;
+
+          // THIS NEEDS TO BE MORE OPINIONATED ABOUT *WHICH* SIGNING DEVICE ARE THESE PUBKEYS COMING FROM
+          // e.g. after the first round of this loop if you successfully find a public key -- that public key
+          // is derived from some root xpub with a particular fingerprint, as you move along this loop to the
+          // next input, you want to *keep* searching until you find a public key that's from the same root fingerprint.
+          // Meaning a member of the same signatureSet. All of the remaining publicKey solutions in this round of
+          // signature validation should be derived from the *same* xpub.
+          //
+          // This assumption is not held if you're just blindly searching for *any* (or the first) valid public key
+          // within the list of signatures. E.g. there are multiple *valid* publicKeys for every input if we're at
+          // this point in the code. But if you don't pay attention to the root xpub as you assign public keys to
+          // a signatureSet, you will get a row of public keys that *may not* all be associated with any particular
+          // ExtendedPublicKey. Obviously that's not quite right. But if uploaded PSBT is fully signed, then this
+          // should not matter and the transaction should validate, build, and be able to be broadcast.
           for (let i = 0; i < signaturesToCheck.length; i += 1) {
             const inputSignature = signaturesToCheck[i];
             if (validateHex(inputSignature) !== "") {
@@ -429,13 +447,7 @@ class SignatureImporter extends React.Component {
               return;
             }
             try {
-              // THIS NEEDS TO BE MORE OPINIONATED ABOUT *WHICH* SIGNING DEVICE ARE THESE PUBKEYS COMING FROM
-              // e.g. after the first round of this loop if you successfully find a public key -- that public key
-              // is derived from some xpub ... and all the remaining solutions in this round of the loop should
-              // be derived from the *same* xpub. This assumption is not help if you're just blindly searching
-              // for *any* valid public key within the list of signatures. E.g. there are multiple *valid* publicKeys
-              // for every input. but if you don't pay attention to the root xpub, you will get a row of public keys
-              // not associated with any particular extended public key.
+              // This returns false if it completes with no error
               publicKey = validateMultisigSignature(
                 network,
                 inputs,
@@ -446,10 +458,10 @@ class SignatureImporter extends React.Component {
             } catch (e) {
               // eslint-disable-next-line no-console
               console.error(e);
-              // Not going to errback, because we expect to see failures
             }
+            // FIXME `&& publicKey is member of a particular root xpub/fingerprint` should be added here!
             if (publicKey) {
-              // Found which pubkey this signature is for ... save it and the signature!
+              // We know inputSignature is a signature for publicKey but we aren't keeping root xpub/xfp info around
               publicKeySet.push(publicKey);
               signatureSet.push(inputSignature);
               break;

@@ -158,25 +158,20 @@ class IndirectSignatureImporter extends React.Component {
       const signatureSetsKeys = Object.keys(signatureData);
       const signatures = [];
 
-      // We have a slight problem for a n-ly signed PSBT here
-      // because there is no order to the pubkey: [sigs] mapping
-      // returned from unchained-wallets (and that's okay)
-      // but if we are just blindly creating an array of signatures then
-      // we might have them out of order, causing a problem down the line
-      // in validation.
+      // We have a slight issue for the n-ly signed PSBT case
+      // because there is no order to the pubkey: [signature(s)] mapping
+      // returned from `unchained-bitcoin`. it's ok, we have valid signatures, etc.
+      // but truncating information can cause problems down the line in keeping
+      // the validation straightforward.
 
-      // e.g. have doubly signed 3 input psbt, 6 signatures come back for 3 pubkeys.
-      // the logic for adding signatures expects the first three signatures in the array
-      // to be all for the same input set, e.g.
+      // e.g. have a doubly-signed psbt with 3 inputs on the same 2-of-3 multisig address,
+      // so 6 signatures total are returned in signatureData back for 2 pubkeys (3 signatures from each pubkey).
+      // here adding a pubkey set matches that signature array.
       // [siga1, siga2, siga3, sigb1, sigb2, sigb3]
-      // ... if the pubkey array that comes back from unchained-wallets is
-      // [siga1, sigb2, siga3, sigb3, siga2, sigb1] then you will get invalid signature
-      // for input2.
+      // In the case of multiple 2-of-3 multisig addresses, the pubkeys can get jumbled and there's no longer
+      // a clear break between signature sets based purely on pubkey. need xfp information as well.
 
-      // what to do?
-      // a) don't modify the data structure that comes back and make the signature validator smarter
-      // b) modify this properly but need to know the mapping between pubkeys:inputs
-      // c) other
+      // For now, shove all of the signatures into the same array and return that.
       signatureSetsKeys.forEach((pubkey) => {
         signatures.push(...signatureData[pubkey]);
       });
@@ -242,7 +237,7 @@ IndirectSignatureImporter.propTypes = {
   extendedPublicKeyImporter: PropTypes.shape({
     method: PropTypes.string,
   }),
-  Signer: PropTypes.shape({}),
+  Signer: PropTypes.shape({}).isRequired,
   fee: PropTypes.string,
   inputsTotalSats: PropTypes.shape({}),
 };
@@ -254,7 +249,6 @@ IndirectSignatureImporter.defaultProps = {
   enableChangeMethod: null,
   disableChangeMethod: null,
   extendedPublicKeyImporter: {},
-  Signer: {},
   fee: "",
   inputsTotalSats: {},
 };

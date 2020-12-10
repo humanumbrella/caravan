@@ -102,8 +102,7 @@ class OutputsForm extends React.Component {
     let total = outputs
       .map((output) => {
         let { amount } = output;
-        // eslint-disable-next-line no-restricted-globals
-        if (!amount || !amount.length || isNaN(amount)) amount = 0;
+        if (!amount || !amount.length || amount.isNaN()) amount = 0;
         return new BigNumber(amount);
       })
       .reduce(
@@ -160,8 +159,7 @@ class OutputsForm extends React.Component {
     const { setFeeRate } = this.props;
     let rate = event.target.value;
 
-    // eslint-disable-next-line no-restricted-globals
-    if (rate === "" || isNaN(parseFloat(rate, 10)) || parseFloat(rate, 10) < 1)
+    if (rate === "" || parseFloat(rate, 10).isNaN() || parseFloat(rate, 10) < 1)
       rate = "0";
     setFeeRate(rate);
   };
@@ -189,13 +187,10 @@ class OutputsForm extends React.Component {
     try {
       feeEstimate = await fetchFeeEstimate(network, client);
     } catch (e) {
-      // eslint-disable-next-line no-console
-      console.error(e);
       feeRateFetchError = "There was an error fetching the fee rate.";
     } finally {
       setFeeRate(
-        // eslint-disable-next-line no-restricted-globals
-        !isNaN(feeEstimate)
+        !feeEstimate.isNaN()
           ? feeEstimate.toString()
           : MIN_SATS_PER_BYTE_FEE.toString()
       );
