@@ -301,6 +301,58 @@ class SignatureImporter extends React.Component {
     );
   };
 
+  // The signatures are all from the same root fingerprint, but are not guaranteed to be in the right order.
+  validateUnorderedSignatureSet = (
+    finalizedSignatureImporters,
+    inputsSignatures,
+    publicKeys,
+    errback
+  ) => {
+    const { inputs, network, outputs } = this.props;
+
+    const remainingSignatures = [...inputsSignatures];
+    const foundInputs = [];
+    while (remainingSignatures.length) {
+      // Grab the first signature
+      const inputSignature = remainingSignatures[0];
+      if (validateHex(inputSignature) !== "") {
+        errback(`Signature is not valid hex.`);
+        return;
+      }
+      let publicKey = "";
+      let foundPubkey = false;
+      // Find which input it's for ...
+      for (let j = 0; j < inputs.length; j += 1) {
+        if (!foundInputs.includes(j)) {
+          try {
+            publicKey = validateMultisigSignature(
+              network,
+              inputs,
+              outputs,
+              j,
+              inputSignature
+            );
+          } catch (e) {
+            errback(`Error processing signature for input ${j + 1}.`);
+            return;
+          }
+          if (publicKey) {
+            publicKeys.push(publicKey);
+            foundInputs.push(j);
+            foundPubkey = true;
+            const indexToRemove = remainingSignatures.indexOf(inputSignature);
+            remainingSignatures.splice(indexToRemove, 1);
+            break;
+          }
+        }
+      }
+      if (!foundPubkey) {
+        errback(`PSBT signature for input is invalid.`);
+        return;
+      }
+    }
+  };
+
   validateSignatureSet = (
     finalizedSignatureImporters,
     inputsSignatures,
@@ -312,48 +364,12 @@ class SignatureImporter extends React.Component {
 
     // The signatures are all from the same root fingerprint, but are not guaranteed to be in the right order.
     if (fromPSBT) {
-      const remainingSignatures = [...inputsSignatures];
-      const foundInputs = [];
-      while (remainingSignatures.length) {
-        // Grab the first signature
-        const inputSignature = remainingSignatures[0];
-        if (validateHex(inputSignature) !== "") {
-          errback(`Signature is not valid hex.`);
-          return;
-        }
-        let publicKey = "";
-        let foundPubkey = false;
-        // Find which input it's for ...
-        for (let j = 0; j < inputs.length; j += 1) {
-          if (!foundInputs.includes(j)) {
-            try {
-              publicKey = validateMultisigSignature(
-                network,
-                inputs,
-                outputs,
-                j,
-                inputSignature
-              );
-              // console.log(`${j} => ${inputSignature} => ${publicKey}`);
-            } catch (e) {
-              errback(`Error processing signature for input ${j + 1}.`);
-              return;
-            }
-            if (publicKey) {
-              publicKeys.push(publicKey);
-              foundInputs.push(j);
-              foundPubkey = true;
-              const indexToRemove = remainingSignatures.indexOf(inputSignature);
-              remainingSignatures.splice(indexToRemove, 1);
-              break;
-            }
-          }
-        }
-        if (!foundPubkey) {
-          errback(`PSBT signature for input is invalid.`);
-          return;
-        }
-      }
+      this.validateUnorderedSignatureSet(
+        finalizedSignatureImporters,
+        inputsSignatures,
+        publicKeys,
+        errback
+      );
     } else {
       for (
         let inputIndex = 0;
@@ -367,7 +383,6 @@ class SignatureImporter extends React.Component {
           return;
         }
 
-        // console.log(`check ${inputSignature} at ${inputIndex}`);
         let publicKey;
         try {
           publicKey = validateMultisigSignature(
@@ -437,12 +452,12 @@ class SignatureImporter extends React.Component {
       return;
     }
     let publicKeyArray = [];
-    let finalizedSignatureImporters = Object.values(signatureImporters).filter(
+    let finSigImporters = Object.values(signatureImporters).filter(
       (signatureImporter) => signatureImporter.finalized
     );
     if (numSignatureSets === 1) {
       this.validateSignatureSet(
-        finalizedSignatureImporters,
+        finSigImporters,
         inputsSignatures,
         publicKeyArray,
         errback,
@@ -478,8 +493,6 @@ class SignatureImporter extends React.Component {
           }
         })
       );
-      // console.log(matrix);
-      // console.log(psbtSignatureObject);
 
       // Now create an array of fingerprint-ordered signatures (within a fingerprint they still might not be
       // in the same order as the inputs ... that check will come later)
@@ -492,25 +505,22 @@ class SignatureImporter extends React.Component {
           });
         }
       }
-      signaturesToCheck = [...orderedSignaturesToCheck];
+      signaturesToCheck = this.filterKnownSignatures([
+        ...orderedSignaturesToCheck,
+      ]);
 
       while (
         signatureSetNumber <= Object.keys(signatureImporters).length &&
         signaturesToCheck.length > 0
       ) {
         publicKeyArray = [];
-        // console.log(signatureSetNumber);
-        // console.log(Object.keys(signatureImporters).length);
-        // setSigningKey(signatureSetNumber, signatureSetNumber - 1);
         const signatureSet = signaturesToCheck.slice(0, inputs.length);
-        finalizedSignatureImporters = Object.values(signatureImporters).filter(
+        finSigImporters = Object.values(signatureImporters).filter(
           (signatureImporter) => signatureImporter.finalized
         );
-        // console.log(signatureSet);
-        // console.log("\n");
 
         this.validateSignatureSet(
-          finalizedSignatureImporters,
+          finSigImporters,
           signatureSet,
           publicKeyArray,
           errback,
@@ -523,7 +533,6 @@ class SignatureImporter extends React.Component {
             finalized: true,
           });
           signaturesToCheck = signaturesToCheck.slice(inputs.length);
-          // console.log(signaturesToCheck.length);
           signatureSetNumber += 1;
         } else {
           errback("Could not validate signatures.");
