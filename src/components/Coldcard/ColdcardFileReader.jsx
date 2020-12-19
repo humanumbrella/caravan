@@ -5,6 +5,7 @@ import Dropzone from "react-dropzone";
 import {
   Box,
   Button,
+  CircularProgress,
   FormHelperText,
   Grid,
   TextField,
@@ -17,6 +18,7 @@ class ColdcardFileReaderBase extends Component {
     super(props);
     this.state = {
       fileType: props.fileType || "JSON",
+      validating: false,
     };
   }
 
@@ -32,8 +34,12 @@ class ColdcardFileReaderBase extends Component {
       errorMessage,
       isTest,
     } = this.props;
-    const { fileType } = this.state;
-    return (
+    const { fileType, validating } = this.state;
+    return validating ? (
+      <div style={{ textAlign: "center", margin: "5em" }}>
+        <CircularProgress disableShrink />
+      </div>
+    ) : (
       <Grid container direction="column">
         {fileType === "JSON" && !isTest && (
           <Grid container>
@@ -94,6 +100,7 @@ class ColdcardFileReaderBase extends Component {
     const { onReceive, onReceivePSBT, setError, hasError } = this.props;
     const { fileType } = this.state;
     if (hasError) return; // do not continue if the bip32path is invalid
+    if (fileType === "PSBT") this.setState({ validating: true });
     if (this.singleAcceptedFile(acceptedFiles, rejectedFiles)) {
       const file = acceptedFiles[0];
       const reader = new FileReader();
@@ -105,10 +112,12 @@ class ColdcardFileReaderBase extends Component {
       };
       reader.readAsText(file);
     } else if (rejectedFiles.length === 1) {
+      this.setState({ validating: false });
       setError(
         `The file you attempted to upload was unacceptable. File type must be .${fileType.toLowerCase()}.`
       );
     } else if (rejectedFiles.length > 1) {
+      this.setState({ validating: false });
       setError(`This dropzone only accepts a single file.`);
     }
   };
