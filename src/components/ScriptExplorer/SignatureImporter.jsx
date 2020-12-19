@@ -7,6 +7,7 @@ import {
   multisigBIP32Path,
   multisigBIP32Root,
   validateBIP32Path,
+  toHexString,
 } from "unchained-bitcoin";
 import { TREZOR, LEDGER, HERMIT, COLDCARD } from "unchained-wallets";
 import {
@@ -281,7 +282,7 @@ class SignatureImporter extends React.Component {
     const signatureJSON = JSON.stringify(signatureImporter.signature);
     return (
       <div>
-        <p>The following signature was imported:</p>
+        <p>The following signature set was imported:</p>
         <Box>
           <Copyable text={signatureJSON} showIcon code />
         </Box>
@@ -293,23 +294,123 @@ class SignatureImporter extends React.Component {
             size="small"
             onClick={this.reset}
           >
-            Remove Signature
+            Remove Signature Set
           </Button>
         </Box>
       </div>
     );
   };
 
-  validateAndSetSignature = (inputsSignatures, errback) => {
-    const {
-      number,
-      inputs,
-      signatureImporters,
-      setComplete,
-      network,
-      outputs,
-      setSigningKey,
-    } = this.props;
+  validateSignatureSet = (
+    finalizedSignatureImporters,
+    inputsSignatures,
+    publicKeys,
+    errback,
+    fromPSBT
+  ) => {
+    const { inputs, network, outputs } = this.props;
+
+    // The signatures are all from the same root fingerprint, but are not guaranteed to be in the right order.
+    if (fromPSBT) {
+      const remainingSignatures = [...inputsSignatures];
+      const foundInputs = [];
+      while (remainingSignatures.length) {
+        // Grab the first signature
+        const inputSignature = remainingSignatures[0];
+        if (validateHex(inputSignature) !== "") {
+          errback(`Signature is not valid hex.`);
+          return;
+        }
+        let publicKey = "";
+        let foundPubkey = false;
+        // Find which input it's for ...
+        for (let j = 0; j < inputs.length; j += 1) {
+          if (!foundInputs.includes(j)) {
+            try {
+              publicKey = validateMultisigSignature(
+                network,
+                inputs,
+                outputs,
+                j,
+                inputSignature
+              );
+              // console.log(`${j} => ${inputSignature} => ${publicKey}`);
+            } catch (e) {
+              errback(`Error processing signature for input ${j + 1}.`);
+              return;
+            }
+            if (publicKey) {
+              publicKeys.push(publicKey);
+              foundInputs.push(j);
+              foundPubkey = true;
+              const indexToRemove = remainingSignatures.indexOf(inputSignature);
+              remainingSignatures.splice(indexToRemove, 1);
+              break;
+            }
+          }
+        }
+        if (!foundPubkey) {
+          errback(`PSBT signature for input is invalid.`);
+          return;
+        }
+      }
+    } else {
+      for (
+        let inputIndex = 0;
+        inputIndex < inputsSignatures.length;
+        inputIndex += 1
+      ) {
+        const inputNumber = inputIndex + 1;
+        const inputSignature = inputsSignatures[inputIndex];
+        if (validateHex(inputSignature) !== "") {
+          errback(`Signature for input ${inputNumber} is not valid hex.`);
+          return;
+        }
+
+        // console.log(`check ${inputSignature} at ${inputIndex}`);
+        let publicKey;
+        try {
+          publicKey = validateMultisigSignature(
+            network,
+            inputs,
+            outputs,
+            inputIndex,
+            inputSignature
+          );
+        } catch (e) {
+          errback(`Error processing signature for input ${inputNumber}.`);
+          return;
+        }
+        if (publicKey) {
+          for (let j = 0; j < finalizedSignatureImporters.length; j += 1) {
+            const finalizedSignatureImporter = finalizedSignatureImporters[j];
+
+            if (
+              finalizedSignatureImporter.signature[inputIndex] ===
+                inputSignature ||
+              finalizedSignatureImporter.publicKeys[inputIndex] === publicKey
+            ) {
+              errback(
+                `Signature for input ${inputNumber} is a duplicate of a previously provided signature.`
+              );
+              return;
+            }
+          }
+          publicKeys.push(publicKey);
+        } else {
+          errback(`Signature for input ${inputNumber} is invalid.`);
+          return;
+        }
+      }
+    }
+  };
+
+  validateAndSetSignature = (
+    inputsSignatures,
+    errback,
+    psbtSignatureObject
+  ) => {
+    const { number, inputs, signatureImporters, setComplete } = this.props;
     if (!Array.isArray(inputsSignatures)) {
       errback("Signature is not an array of strings.");
       return;
@@ -335,161 +436,99 @@ class SignatureImporter extends React.Component {
       );
       return;
     }
-    const publicKeys = [];
+    let publicKeyArray = [];
+    let finalizedSignatureImporters = Object.values(signatureImporters).filter(
+      (signatureImporter) => signatureImporter.finalized
+    );
     if (numSignatureSets === 1) {
-      const finalizedSignatureImporters = Object.values(
-        signatureImporters
-      ).filter((signatureImporter) => signatureImporter.finalized);
-      for (
-        let inputIndex = 0;
-        inputIndex < inputsSignatures.length;
-        inputIndex += 1
-      ) {
-        const inputNumber = inputIndex + 1;
-        const inputSignature = inputsSignatures[inputIndex];
-        if (validateHex(inputSignature) !== "") {
-          errback(`Signature for input ${inputNumber} is not valid hex.`);
-          return;
-        }
-
-        let publicKey;
-        try {
-          publicKey = validateMultisigSignature(
-            network,
-            inputs,
-            outputs,
-            inputIndex,
-            inputSignature
-          );
-        } catch (e) {
-          errback(`Signature for input ${inputNumber} is invalid.`);
-          return;
-        }
-        if (publicKey) {
-          for (
-            let finalizedSignatureImporterNum = 0;
-            finalizedSignatureImporterNum < finalizedSignatureImporters.length;
-            finalizedSignatureImporterNum += 1
-          ) {
-            const finalizedSignatureImporter =
-              finalizedSignatureImporters[finalizedSignatureImporterNum];
-
-            if (
-              finalizedSignatureImporter.signature[inputIndex] ===
-                inputSignature ||
-              finalizedSignatureImporter.publicKeys[inputIndex] === publicKey
-            ) {
-              errback(
-                `Signature for input ${inputNumber} is a duplicate of a previously provided signature.`
-              );
-              return;
-            }
-          }
-          publicKeys.push(publicKey);
-        } else {
-          errback(`Signature for input ${inputNumber} is invalid.`);
-          return;
-        }
+      this.validateSignatureSet(
+        finalizedSignatureImporters,
+        inputsSignatures,
+        publicKeyArray,
+        errback,
+        psbtSignatureObject !== undefined
+      );
+      if (publicKeyArray.length) {
+        setComplete(number, {
+          signature: inputsSignatures,
+          publicKeys: publicKeyArray,
+          finalized: true,
+        });
       }
-      setComplete(number, {
-        signature: inputsSignatures,
-        publicKeys,
-        finalized: true,
-      });
     } else {
       // We land here if a PSBT has been uploaded with multiple signature sets.
       // In case we already have some signatures saved, e.g. first a singly-signed
       // PSBT was uploaded, and now a doubly-signed PSBT was uploaded, filter out
       // the known signatures.
-      let signaturesToCheck = this.filterKnownSignatures(inputsSignatures);
+      let signaturesToCheck;
       let signatureSetNumber = number; // so we can iterate, number is a const from props.
+
+      // First let's construct a matrix of fingerprint : [pubkey(s)]
+      const matrix = {};
+      inputs.forEach((input) =>
+        input.multisig.bip32Derivation.forEach((b32d) => {
+          const rootFingerprint = toHexString(b32d.masterFingerprint);
+          const pubkey = toHexString(b32d.pubkey);
+          if (Object.keys(matrix).includes(rootFingerprint)) {
+            if (matrix[rootFingerprint].indexOf(pubkey) === -1) {
+              matrix[rootFingerprint].push(pubkey);
+            }
+          } else {
+            matrix[rootFingerprint] = [pubkey];
+          }
+        })
+      );
+      // console.log(matrix);
+      // console.log(psbtSignatureObject);
+
+      // Now create an array of fingerprint-ordered signatures (within a fingerprint they still might not be
+      // in the same order as the inputs ... that check will come later)
+      const orderedSignaturesToCheck = [];
+      const xfpArray = Object.keys(matrix);
+      for (let i = 0; i < xfpArray.length; i += 1) {
+        if (matrix[xfpArray[i]].some((pk) => pk in psbtSignatureObject)) {
+          matrix[xfpArray[i]].forEach((pk) => {
+            return orderedSignaturesToCheck.push(...psbtSignatureObject[pk]);
+          });
+        }
+      }
+      signaturesToCheck = [...orderedSignaturesToCheck];
 
       while (
         signatureSetNumber <= Object.keys(signatureImporters).length &&
         signaturesToCheck.length > 0
       ) {
-        setSigningKey(signatureSetNumber, signatureSetNumber - 1);
-        const signatureSet = [];
-        const publicKeySet = [];
+        publicKeyArray = [];
+        // console.log(signatureSetNumber);
+        // console.log(Object.keys(signatureImporters).length);
+        // setSigningKey(signatureSetNumber, signatureSetNumber - 1);
+        const signatureSet = signaturesToCheck.slice(0, inputs.length);
+        finalizedSignatureImporters = Object.values(signatureImporters).filter(
+          (signatureImporter) => signatureImporter.finalized
+        );
+        // console.log(signatureSet);
+        // console.log("\n");
 
-        // Loop over inputs and check the sigs array to see if you can find a public key or not.
-        // NOTE - signaturesToCheck.length could be much larger than inputs.length!
-        // This is *not* efficient, but it will work as a temporary solution until we refactor
-        // the signatures data structure returned from unchained-bitcoin or change how caravan
-        // validates signatures.
-
-        // The "sets" of signatures that come out of this process are not all connected /  tied to the same root xpub
-        // because we've truncated a little information in the psbt parsing => signature return process
-        // We can re-generate that information later but for now this should work. There are
-        // bugs in edge cases that need to be handled better.
-        for (let inputIndex = 0; inputIndex < inputs.length; inputIndex += 1) {
-          let publicKey;
-
-          // THIS NEEDS TO BE MORE OPINIONATED ABOUT *WHICH* SIGNING DEVICE ARE THESE PUBKEYS COMING FROM
-          // e.g. after the first round of this loop if you successfully find a public key -- that public key
-          // is derived from some root xpub with a particular fingerprint, as you move along this loop to the
-          // next input, you want to *keep* searching until you find a public key that's from the same root fingerprint.
-          // Meaning a member of the same signatureSet. All of the remaining publicKey solutions in this round of
-          // signature validation should be derived from the *same* xpub.
-          //
-          // This assumption is not held if you're just blindly searching for *any* (or the first) valid public key
-          // within the list of signatures. E.g. there are multiple *valid* publicKeys for every input if we're at
-          // this point in the code. But if you don't pay attention to the root xpub as you assign public keys to
-          // a signatureSet, you will get a row of public keys that *may not* all be associated with any particular
-          // ExtendedPublicKey. Obviously that's not quite right. But if uploaded PSBT is fully signed, then this
-          // should not matter and the transaction should validate, build, and be able to be broadcast.
-          for (let i = 0; i < signaturesToCheck.length; i += 1) {
-            const inputSignature = signaturesToCheck[i];
-            if (validateHex(inputSignature) !== "") {
-              errback(
-                `Signature for input at index ${inputIndex} is not valid hex.`
-              );
-              return;
-            }
-            try {
-              // This returns false if it completes with no error
-              publicKey = validateMultisigSignature(
-                network,
-                inputs,
-                outputs,
-                inputIndex,
-                inputSignature
-              );
-            } catch (e) {
-              // eslint-disable-next-line no-console
-              console.error(e);
-            }
-            // FIXME `&& publicKey is member of a particular root xpub/fingerprint` should be added here!
-            if (publicKey) {
-              // We know inputSignature is a signature for publicKey but we aren't keeping root xpub/xfp info around
-              publicKeySet.push(publicKey);
-              signatureSet.push(inputSignature);
-              break;
-            }
-          }
-          if (!publicKey) {
-            errback(`No valid signature for input ${inputIndex} found.`);
-            return;
-          }
-        }
-        if (
-          publicKeySet.length !== inputs.length ||
-          signatureSet.length !== inputs.length
-        ) {
-          errback(`There was an error in validating the transaction.`);
+        this.validateSignatureSet(
+          finalizedSignatureImporters,
+          signatureSet,
+          publicKeyArray,
+          errback,
+          true
+        );
+        if (publicKeyArray.length) {
+          setComplete(signatureSetNumber, {
+            signature: signatureSet,
+            publicKeys: publicKeyArray,
+            finalized: true,
+          });
+          signaturesToCheck = signaturesToCheck.slice(inputs.length);
+          // console.log(signaturesToCheck.length);
+          signatureSetNumber += 1;
+        } else {
+          errback("Could not validate signatures.");
           return;
         }
-        // Set the signatureSetNumber we're currently on to complete and include publicKeySet/signatureSet
-        setComplete(signatureSetNumber, {
-          signature: signatureSet,
-          publicKeySet,
-          finalized: true,
-        });
-        // Send signatures to this method again, since now some of them are marked
-        // as finalized, and they will be filtered out.
-        signaturesToCheck = this.filterKnownSignatures(inputsSignatures);
-        // increment which signature number we're working on next.
-        signatureSetNumber += 1;
       }
     }
   };
@@ -562,7 +601,6 @@ SignatureImporter.propTypes = {
   signatureImporters: PropTypes.shape({}).isRequired,
   txid: PropTypes.string.isRequired,
   unsignedTransaction: PropTypes.shape({}).isRequired,
-  setSigningKey: PropTypes.func.isRequired,
 };
 
 SignatureImporter.defaultProps = {
