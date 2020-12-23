@@ -143,18 +143,20 @@ class WalletGenerator extends React.Component {
     ).length;
   };
 
-  toggleImporters = (event) => {
+  toggleImporters = (event, clear) => {
     event.preventDefault();
     const {
       setImportersVisible,
       configuring,
       resetWallet,
+      initialLoadComplete,
       setGenerating,
     } = this.props;
 
     if (!configuring) {
       setGenerating(false);
-      resetWallet();
+      if (clear) resetWallet();
+      if (!clear) initialLoadComplete();
     }
 
     setImportersVisible(!configuring);
@@ -370,7 +372,7 @@ class WalletGenerator extends React.Component {
           <Card>
             <CardHeader title={this.title()} />
             <CardContent>
-              <Button href="#" onClick={this.toggleImporters}>
+              <Button href="#" onClick={(e) => this.toggleImporters(e, false)}>
                 {configuring ? "Hide Key Selection" : "Edit Details"}
               </Button>
               <ConfirmWallet />
@@ -380,7 +382,7 @@ class WalletGenerator extends React.Component {
                 information.
               </p>
               <WalletConfigInteractionButtons
-                onClearFn={(e) => this.toggleImporters(e)}
+                onClearFn={(e) => this.toggleImporters(e, true)}
                 onDownloadFn={downloadWalletDetails}
               />
               {unknownClient && (
