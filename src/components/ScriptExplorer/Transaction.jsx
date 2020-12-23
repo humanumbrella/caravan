@@ -28,12 +28,23 @@ class Transaction extends React.Component {
       error: "",
       broadcasting: false,
       txid: "",
+      signedTransaction: {},
+      signedTransactionHex: "",
     };
   }
 
-  buildSignedTransaction = () => {
+  componentDidMount() {
+    const signedTransaction = this.buildSignedTransaction();
+    const signedTransactionHex = signedTransaction.toHex();
+    this.setState({
+      signedTransaction,
+      signedTransactionHex,
+    });
+  }
+
+  buildSignedTransaction = (toHex) => {
     const { network, inputs, outputs, signatureImporters } = this.props;
-    return signedMultisigTransaction(
+    const signedTransaction = signedMultisigTransaction(
       network,
       inputs,
       outputs,
@@ -41,17 +52,22 @@ class Transaction extends React.Component {
         (signatureImporter) => signatureImporter.signature
       )
     );
+    return toHex ? signedTransaction.toHex() : signedTransaction;
   };
 
   handleBroadcast = async () => {
     const { client, network, setTxid } = this.props;
-    const signedTransaction = this.buildSignedTransaction();
+    const { signedTransactionHex } = this.state;
     let error = "";
     let txid = "";
     this.setState({ broadcasting: true });
+    const transactionToBroadcast =
+      signedTransactionHex !== ""
+        ? signedTransactionHex
+        : this.buildSignedTransaction(true);
     try {
       txid = await broadcastTransaction(
-        signedTransaction.toHex(),
+        transactionToBroadcast,
         network,
         client
       );
@@ -60,7 +76,12 @@ class Transaction extends React.Component {
       console.error(e);
       error = `There was an error broadcasting the transaction.: ${e}`;
     } finally {
-      this.setState({ txid, error, broadcasting: false });
+      this.setState({
+        txid,
+        error,
+        broadcasting: false,
+        signedTransactionHex: "",
+      });
       setTxid(txid);
     }
   };
@@ -72,9 +93,13 @@ class Transaction extends React.Component {
   };
 
   render() {
-    const { error, broadcasting, txid } = this.state;
-    const signedTransaction = this.buildSignedTransaction();
-    const signedTransactionHex = signedTransaction.toHex();
+    const {
+      error,
+      broadcasting,
+      txid,
+      signedTransaction,
+      signedTransactionHex,
+    } = this.state;
     return (
       <Card>
         <CardHeader title="Broadcast" />

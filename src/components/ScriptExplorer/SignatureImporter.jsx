@@ -37,7 +37,6 @@ import {
   setSignatureImporterComplete,
 } from "../../actions/signatureImporterActions";
 import "react-table/react-table.css";
-import { setSigningKey as setSigningKeyAction } from "../../actions/transactionActions";
 
 const TEXT = "text";
 const UNKNOWN = "unknown";
@@ -49,6 +48,7 @@ class SignatureImporter extends React.Component {
     super(props);
     this.state = {
       disableChangeMethod: false,
+      signatureOrder: [],
     };
   }
 
@@ -302,15 +302,19 @@ class SignatureImporter extends React.Component {
   };
 
   // The signatures are all from the same root fingerprint, but are not guaranteed to be in the right order.
+  // NOTE: whereas `validateSignatureSet` only modifies the set of publicKeys - this one modifies the signatureSet as well
+  // because the signature set should be ordered the same as the publicKeys.
   validateUnorderedSignatureSet = (
-    finalizedSignatureImporters,
     inputsSignatures,
     publicKeys,
+    signaturesArray,
     errback
   ) => {
     const { inputs, network, outputs } = this.props;
+    const { signatureOrder } = this.state;
 
     const remainingSignatures = [...inputsSignatures];
+    const signatureInProperOrder = new Array(inputs.length);
     const foundInputs = [];
     while (remainingSignatures.length) {
       // Grab the first signature
@@ -321,6 +325,34 @@ class SignatureImporter extends React.Component {
       }
       let publicKey = "";
       let foundPubkey = false;
+      if (
+        signatureOrder.length &&
+        signatureOrder.length === inputsSignatures.length
+      ) {
+        let sigIndex;
+        // we've already been through this ... re-use that same order
+        for (let j = 0; j < inputs.length; j += 1) {
+          sigIndex = signatureOrder.indexOf(j);
+          try {
+            publicKey = validateMultisigSignature(
+              network,
+              inputs,
+              outputs,
+              j,
+              inputsSignatures[sigIndex]
+            );
+          } catch (e) {
+            errback(`Error processing signature for input ${j + 1}.`);
+            return;
+          }
+          if (publicKey) {
+            publicKeys.push(publicKey);
+            signatureInProperOrder[j] = inputsSignatures[sigIndex];
+          }
+        }
+        signatureInProperOrder.forEach((sig) => signaturesArray.push(sig));
+        return;
+      }
       // Find which input it's for ...
       for (let j = 0; j < inputs.length; j += 1) {
         if (!foundInputs.includes(j)) {
@@ -338,6 +370,7 @@ class SignatureImporter extends React.Component {
           }
           if (publicKey) {
             publicKeys.push(publicKey);
+            signatureInProperOrder[j] = inputSignature;
             foundInputs.push(j);
             foundPubkey = true;
             const indexToRemove = remainingSignatures.indexOf(inputSignature);
@@ -351,12 +384,19 @@ class SignatureImporter extends React.Component {
         return;
       }
     }
+    // We found that the signatures were in another order, so set the array and
+    // save the order.
+    if (signatureInProperOrder !== inputsSignatures) {
+      signatureInProperOrder.forEach((sig) => signaturesArray.push(sig));
+      this.setState({ signatureOrder: [...foundInputs] });
+    }
   };
 
   validateSignatureSet = (
     finalizedSignatureImporters,
     inputsSignatures,
     publicKeys,
+    signaturesArray,
     errback,
     fromPSBT
   ) => {
@@ -365,9 +405,9 @@ class SignatureImporter extends React.Component {
     // The signatures are all from the same root fingerprint, but are not guaranteed to be in the right order.
     if (fromPSBT) {
       this.validateUnorderedSignatureSet(
-        finalizedSignatureImporters,
         inputsSignatures,
         publicKeys,
+        signaturesArray,
         errback
       );
     } else {
@@ -452,6 +492,7 @@ class SignatureImporter extends React.Component {
       return;
     }
     let publicKeyArray = [];
+    let signaturesArray = [];
     let finSigImporters = Object.values(signatureImporters).filter(
       (signatureImporter) => signatureImporter.finalized
     );
@@ -460,12 +501,15 @@ class SignatureImporter extends React.Component {
         finSigImporters,
         inputsSignatures,
         publicKeyArray,
+        signaturesArray,
         errback,
         psbtSignatureObject !== undefined
       );
       if (publicKeyArray.length) {
         setComplete(number, {
-          signature: inputsSignatures,
+          signature: signaturesArray.length
+            ? signaturesArray
+            : inputsSignatures,
           publicKeys: publicKeyArray,
           finalized: true,
         });
@@ -494,19 +538,19 @@ class SignatureImporter extends React.Component {
         })
       );
 
-      // Now create an array of fingerprint-ordered signatures (within a fingerprint they still might not be
-      // in the same order as the inputs ... that check will come later)
-      const orderedSignaturesToCheck = [];
+      // Now create an array of fingerprint-ordered signatures (within a fingerprint they, at present (unfortunately),
+      // still might not be in the same order as the inputs ... that check will come later)
+      const xfpOrderedSignaturesToCheck = [];
       const xfpArray = Object.keys(matrix);
       for (let i = 0; i < xfpArray.length; i += 1) {
         if (matrix[xfpArray[i]].some((pk) => pk in psbtSignatureObject)) {
           matrix[xfpArray[i]].forEach((pk) => {
-            return orderedSignaturesToCheck.push(...psbtSignatureObject[pk]);
+            return xfpOrderedSignaturesToCheck.push(...psbtSignatureObject[pk]);
           });
         }
       }
       signaturesToCheck = this.filterKnownSignatures([
-        ...orderedSignaturesToCheck,
+        ...xfpOrderedSignaturesToCheck,
       ]);
 
       while (
@@ -514,6 +558,7 @@ class SignatureImporter extends React.Component {
         signaturesToCheck.length > 0
       ) {
         publicKeyArray = [];
+        signaturesArray = [];
         const signatureSet = signaturesToCheck.slice(0, inputs.length);
         finSigImporters = Object.values(signatureImporters).filter(
           (signatureImporter) => signatureImporter.finalized
@@ -523,12 +568,13 @@ class SignatureImporter extends React.Component {
           finSigImporters,
           signatureSet,
           publicKeyArray,
+          signaturesArray,
           errback,
           true
         );
         if (publicKeyArray.length) {
           setComplete(signatureSetNumber, {
-            signature: signatureSet,
+            signature: signaturesArray.length ? signaturesArray : signatureSet,
             publicKeys: publicKeyArray,
             finalized: true,
           });
@@ -636,7 +682,6 @@ const mapDispatchToProps = {
   setSignature: setSignatureImporterSignature,
   setFinalized: setSignatureImporterFinalized,
   setComplete: setSignatureImporterComplete,
-  setSigningKey: setSigningKeyAction,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(SignatureImporter);
