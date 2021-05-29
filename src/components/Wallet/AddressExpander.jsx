@@ -230,7 +230,11 @@ class AddressExpander extends React.Component {
       case MODE_UTXO:
         return (
           <Grid item md={12}>
-            <UTXOSet inputs={utxos} inputsTotalSats={balanceSats} />
+            <UTXOSet
+              inputs={utxos}
+              inputsTotalSats={balanceSats}
+              multisig={multisig}
+            />
           </Grid>
         );
       case MODE_REDEEM:

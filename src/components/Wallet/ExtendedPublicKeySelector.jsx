@@ -125,24 +125,26 @@ class ExtendedPublicKeySelector extends React.Component {
 
     for (let inputIndex = 0; inputIndex < inputs.length; inputIndex += 1) {
       const input = inputs[inputIndex];
-      const derivedKey = deriveChildPublicKey(
-        extendedPublicKeyImporter.extendedPublicKey,
-        input.bip32Path,
-        network
-      );
-      for (
-        let importerIndex = 1;
-        importerIndex <= Object.keys(signatureImporters).length;
-        importerIndex += 1
-      ) {
-        const importer = signatureImporters[importerIndex];
+      if (input.bip32Path) {
+        const derivedKey = deriveChildPublicKey(
+          extendedPublicKeyImporter.extendedPublicKey,
+          input.bip32Path,
+          network
+        );
         for (
-          let publicKeyIndex = 0;
-          publicKeyIndex < importer.publicKeys.length;
-          publicKeyIndex += 1
+          let importerIndex = 1;
+          importerIndex <= Object.keys(signatureImporters).length;
+          importerIndex += 1
         ) {
-          const publicKey = importer.publicKeys[publicKeyIndex];
-          if (publicKey === derivedKey) return false;
+          const importer = signatureImporters[importerIndex];
+          for (
+            let publicKeyIndex = 0;
+            publicKeyIndex < importer.publicKeys.length;
+            publicKeyIndex += 1
+          ) {
+            const publicKey = importer.publicKeys[publicKeyIndex];
+            if (publicKey === derivedKey) return false;
+          }
         }
       }
     }
