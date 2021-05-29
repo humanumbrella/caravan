@@ -218,7 +218,7 @@ class AddressExpander extends React.Component {
 
   expandContent = () => {
     const { client, node } = this.props;
-    const { utxos, balanceSats, multisig } = node;
+    const { utxos, balanceSats, multisig, bip32Path } = node;
     const { expandMode } = this.state;
 
     if (client.type === "public" && expandMode === MODE_WATCH)
@@ -234,6 +234,7 @@ class AddressExpander extends React.Component {
               inputs={utxos}
               inputsTotalSats={balanceSats}
               multisig={multisig}
+              bip32Path={bip32Path}
             />
           </Grid>
         );

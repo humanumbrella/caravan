@@ -41,14 +41,14 @@ class UTXOSet extends React.Component {
   }
 
   toggleInput = (inputIndex) => {
-    const { setInputs, multisig } = this.props;
+    const { setInputs, multisig, bip32Path } = this.props;
     const { inputs, inputsSelected } = this.state;
     if (inputsSelected > 1 || !inputs[inputIndex].checked) {
       inputs[inputIndex].checked = !inputs[inputIndex].checked;
       let inputsToSpend = inputs.filter((input) => input.checked);
       if (multisig) {
         inputsToSpend = inputsToSpend.map((utxo) => {
-          return { ...utxo, multisig };
+          return { ...utxo, multisig, bip32Path };
         });
       }
       setInputs(inputsToSpend);
@@ -139,10 +139,12 @@ UTXOSet.propTypes = {
   inputsTotalSats: PropTypes.shape({}).isRequired,
   setInputs: PropTypes.func.isRequired,
   multisig: PropTypes.shape({}),
+  bip32Path: PropTypes.string,
 };
 
 UTXOSet.defaultProps = {
   multisig: false,
+  bip32Path: "",
 };
 
 function mapStateToProps(state) {
