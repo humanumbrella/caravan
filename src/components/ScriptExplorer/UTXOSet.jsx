@@ -16,6 +16,7 @@ import {
   Checkbox,
 } from "@material-ui/core";
 import { OpenInNew } from "@material-ui/icons";
+import BigNumber from "bignumber.js";
 import { externalLink } from "../../utils";
 import Copyable from "../Copyable";
 
@@ -31,6 +32,7 @@ class UTXOSet extends React.Component {
     super(props);
     this.state = {
       inputsSelected: props.inputs.length,
+      inputsSatsSelected: props.inputsTotalSats,
       inputs: props.inputs.map((input) => {
         return {
           ...input,
@@ -52,14 +54,22 @@ class UTXOSet extends React.Component {
         });
       }
       setInputs(inputsToSpend);
-      this.setState({ inputsSelected: inputsToSpend.length });
+      const satsSelected = inputsToSpend.reduce(
+        (accumulator, input) => accumulator.plus(input.amountSats),
+        new BigNumber(0)
+      );
+      this.setState({
+        inputsSelected: inputsToSpend.length,
+        inputsSatsSelected: satsSelected,
+      });
     } else {
+      // eslint-disable-next-line no-console
       console.error("have to spend at least one input.");
     }
   };
 
   renderInputs = () => {
-    const { network } = this.props;
+    const { network, showSelection } = this.props;
     const { inputs } = this.state;
     return inputs.map((input, inputIndex) => {
       const confirmedStyle = `${styles.utxoTxid}${
@@ -68,14 +78,16 @@ class UTXOSet extends React.Component {
       const confirmedTitle = input.confirmed ? "confirmed" : "unconfirmed";
       return (
         <TableRow hover key={input.txid}>
-          <TableCell>
-            <Checkbox
-              data-testid={`utxo-checkbox-${inputIndex}`}
-              checked={input.checked}
-              onClick={() => this.toggleInput(inputIndex)}
-              color="primary"
-            />
-          </TableCell>
+          {showSelection && (
+            <TableCell>
+              <Checkbox
+                data-testid={`utxo-checkbox-${inputIndex}`}
+                checked={input.checked}
+                onClick={() => this.toggleInput(inputIndex)}
+                color="primary"
+              />
+            </TableCell>
+          )}
           <TableCell>{inputIndex + 1}</TableCell>
           <TableCell className={confirmedStyle}>
             <Copyable text={input.txid} showIcon showText={false}>
@@ -100,7 +112,8 @@ class UTXOSet extends React.Component {
   };
 
   render() {
-    const { inputs, inputsTotalSats } = this.props;
+    const { inputs, inputsTotalSats, showSelection = true } = this.props;
+    const { inputsSatsSelected } = this.state;
     return (
       <>
         <Typography variant="h5">
@@ -110,7 +123,7 @@ class UTXOSet extends React.Component {
         <Table>
           <TableHead>
             <TableRow hover>
-              <TableCell>Select</TableCell>
+              {showSelection && <TableCell>Select</TableCell>}
               <TableCell>Number</TableCell>
               <TableCell>TXID</TableCell>
               <TableCell>Index</TableCell>
@@ -123,7 +136,9 @@ class UTXOSet extends React.Component {
             <TableRow hover>
               <TableCell colSpan={3}>TOTAL:</TableCell>
               <TableCell colSpan={2}>
-                {satoshisToBitcoins(inputsTotalSats).toString()}
+                {inputsSatsSelected
+                  ? satoshisToBitcoins(inputsSatsSelected).toString()
+                  : satoshisToBitcoins(inputsTotalSats).toString()}
               </TableCell>
             </TableRow>
           </TableFooter>
@@ -140,11 +155,13 @@ UTXOSet.propTypes = {
   setInputs: PropTypes.func.isRequired,
   multisig: PropTypes.shape({}),
   bip32Path: PropTypes.string,
+  showSelection: PropTypes.bool,
 };
 
 UTXOSet.defaultProps = {
   multisig: false,
   bip32Path: "",
+  showSelection: true,
 };
 
 function mapStateToProps(state) {

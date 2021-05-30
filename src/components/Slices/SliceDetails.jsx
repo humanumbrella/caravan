@@ -108,7 +108,7 @@ const SliceDetails = ({ slice, client, network }) => {
         <UTXOSet
           inputs={slice.utxos}
           inputsTotalSats={slice.balanceSats}
-          multisig={slice.multisig}
+          showSelection={false}
         />
       ),
     },
