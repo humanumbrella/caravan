@@ -31,7 +31,6 @@ class UTXOSet extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      inputsSelected: props.inputs.length,
       inputsSatsSelected: props.inputsTotalSats,
       inputs: props.inputs.map((input) => {
         return {
@@ -39,33 +38,64 @@ class UTXOSet extends React.Component {
           checked: true,
         };
       }),
+      toggleAll: true,
     };
   }
 
   toggleInput = (inputIndex) => {
     const { setInputs, multisig, bip32Path } = this.props;
-    const { inputs, inputsSelected } = this.state;
-    if (inputsSelected > 1 || !inputs[inputIndex].checked) {
-      inputs[inputIndex].checked = !inputs[inputIndex].checked;
-      let inputsToSpend = inputs.filter((input) => input.checked);
-      if (multisig) {
-        inputsToSpend = inputsToSpend.map((utxo) => {
-          return { ...utxo, multisig, bip32Path };
-        });
-      }
-      setInputs(inputsToSpend);
-      const satsSelected = inputsToSpend.reduce(
-        (accumulator, input) => accumulator.plus(input.amountSats),
-        new BigNumber(0)
-      );
-      this.setState({
-        inputsSelected: inputsToSpend.length,
-        inputsSatsSelected: satsSelected,
+    const { inputs } = this.state;
+    this.setState({ toggleAll: false });
+    inputs[inputIndex].checked = !inputs[inputIndex].checked;
+    let inputsToSpend = inputs.filter((input) => input.checked);
+    if (multisig) {
+      inputsToSpend = inputsToSpend.map((utxo) => {
+        return { ...utxo, multisig, bip32Path };
       });
-    } else {
-      // eslint-disable-next-line no-console
-      console.error("have to spend at least one input.");
     }
+    if (inputsToSpend.length > 0) {
+      setInputs(inputsToSpend);
+      this.updateDisplay(inputsToSpend);
+    } else {
+      this.updateDisplay([]);
+    }
+  };
+
+  toggleAll = () => {
+    const { setInputs, multisig, bip32Path } = this.props;
+    const { inputs, toggleAll } = this.state;
+
+    const newState = !toggleAll;
+
+    inputs.forEach((input) => {
+      const i = input;
+      i.checked = newState;
+      return i;
+    });
+
+    if (newState) {
+      const inputsToSpend = multisig
+        ? inputs.map((utxo) => {
+            return { ...utxo, multisig, bip32Path };
+          })
+        : inputs;
+      setInputs(inputsToSpend);
+      this.updateDisplay(inputsToSpend);
+    } else {
+      this.updateDisplay([]);
+    }
+
+    this.setState({ toggleAll: newState });
+  };
+
+  updateDisplay = (inputsToSpend) => {
+    const satsSelected = inputsToSpend.reduce(
+      (accumulator, input) => accumulator.plus(input.amountSats),
+      new BigNumber(0)
+    );
+    this.setState({
+      inputsSatsSelected: satsSelected,
+    });
   };
 
   renderInputs = () => {
@@ -113,7 +143,7 @@ class UTXOSet extends React.Component {
 
   render() {
     const { inputs, inputsTotalSats, showSelection = true } = this.props;
-    const { inputsSatsSelected } = this.state;
+    const { inputsSatsSelected, toggleAll } = this.state;
     return (
       <>
         <Typography variant="h5">
@@ -123,7 +153,16 @@ class UTXOSet extends React.Component {
         <Table>
           <TableHead>
             <TableRow hover>
-              {showSelection && <TableCell>Select</TableCell>}
+              {showSelection && (
+                <TableCell>
+                  <Checkbox
+                    data-testid="utxo-check-all"
+                    checked={toggleAll}
+                    onClick={() => this.toggleAll()}
+                    color="primary"
+                  />
+                </TableCell>
+              )}
               <TableCell>Number</TableCell>
               <TableCell>TXID</TableCell>
               <TableCell>Index</TableCell>
