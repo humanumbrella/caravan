@@ -32,42 +32,51 @@ class UTXOSet extends React.Component {
     super(props);
     this.state = {
       inputsSatsSelected: props.inputsTotalSats,
-      inputs: props.inputs.map((input) => {
+      localInputs: props.inputs.map((input) => {
         return {
           ...input,
-          checked: true,
+          checked: props.selectAll,
         };
       }),
       toggleAll: true,
     };
   }
 
+  componentDidUpdate(prevProps, prevState, snapshot) {
+    const { node } = this.props;
+    if (prevProps.node.spend !== node.spend) {
+      // the parent component has been checked or unchecked so we need to select or deselect all
+      this.toggleAll(node.spend);
+    }
+  }
+
   toggleInput = (inputIndex) => {
-    const { inputs } = this.state;
+    const { localInputs } = this.state;
     this.setState({ toggleAll: false });
 
-    inputs[inputIndex].checked = !inputs[inputIndex].checked;
+    localInputs[inputIndex].checked = !localInputs[inputIndex].checked;
 
-    this.setInputsAndUpdateDisplay(inputs);
+    this.setInputsAndUpdateDisplay(localInputs);
   };
 
-  toggleAll = () => {
-    const { inputs, toggleAll } = this.state;
+  toggleAll = (setTo = null) => {
+    const { localInputs, toggleAll } = this.state;
     const toggled = !toggleAll;
 
-    inputs.forEach((input) => {
+    localInputs.forEach((input) => {
       const i = input;
-      i.checked = toggled;
+      i.checked = setTo === null ? toggled : setTo;
       return i;
     });
 
-    this.setInputsAndUpdateDisplay(inputs);
+    this.setInputsAndUpdateDisplay(localInputs);
     this.setState({ toggleAll: toggled });
   };
 
-  setInputsAndUpdateDisplay = (inputs) => {
-    const { setInputs, multisig, bip32Path } = this.props;
-    let inputsToSpend = inputs.filter((input) => input.checked);
+  setInputsAndUpdateDisplay = (incomingInputs) => {
+    const { setInputs, multisig, bip32Path, inputs } = this.props;
+    const { localInputs } = this.state;
+    let inputsToSpend = incomingInputs.filter((input) => input.checked);
     if (multisig) {
       inputsToSpend = inputsToSpend.map((utxo) => {
         return { ...utxo, multisig, bip32Path };
@@ -80,15 +89,50 @@ class UTXOSet extends React.Component {
     this.setState({
       inputsSatsSelected: satsSelected,
     });
+
+    // at this point we have inputs from the store
+    // as well as selected inputs from this particular node
+    // what we need to do is add em together and dedupe
+    // then call setInputs on the result.
+
+    // GOTTA BE SMART HERE BC CANT DUPLICATE
+    const notMyInputs = inputs.filter((input) => {
+      const utxoMatch = localInputs.filter((localInput) => {
+        return (
+          localInput.txid === input.txid && localInput.index === input.index
+        );
+      });
+      return utxoMatch.length === 0;
+    });
+
+    if (notMyInputs.length > 0) {
+      // we have some inputs already in the store
+      console.log(`existing inputs already in props: ${inputs.length}`);
+      // cannot simply concat bc we will get duplicates ...
+
+      // there are two factors to keep in mind:
+      // 1 - there are existing inputs in the store from *another* node/address
+      // 2 - there are existing inputs in the store from *this* node/address [ignore]
+
+      // return utxo.txid === input.txid && utxo.index === input.index;
+
+      inputsToSpend = inputsToSpend.concat(notMyInputs);
+    }
+
     if (inputsToSpend.length > 0) {
+      console.log(
+        `going to set transaction inputs to: ${inputsToSpend.length}`
+      );
       setInputs(inputsToSpend);
+    } else if (multisig) {
+      setInputs([]);
     }
   };
 
   renderInputs = () => {
     const { network, showSelection, finalizedOutputs } = this.props;
-    const { inputs } = this.state;
-    return inputs.map((input, inputIndex) => {
+    const { localInputs } = this.state;
+    return localInputs.map((input, inputIndex) => {
       const confirmedStyle = `${styles.utxoTxid}${
         input.confirmed ? "" : ` ${styles.unconfirmed}`
       }`;
@@ -134,19 +178,20 @@ class UTXOSet extends React.Component {
       inputs,
       inputsTotalSats,
       showSelection = true,
+      hideSelectAllInHeader,
       finalizedOutputs,
     } = this.props;
-    const { inputsSatsSelected, toggleAll } = this.state;
+    const { inputsSatsSelected, toggleAll, localInputs } = this.state;
     return (
       <>
         <Typography variant="h5">
-          {`Available Inputs (${inputs.length})`}{" "}
+          {`Available Inputs (${localInputs.length})`}{" "}
         </Typography>
         <p>The following UTXOs will be spent as inputs in a new transaction.</p>
         <Table>
           <TableHead>
             <TableRow hover>
-              {showSelection && (
+              {showSelection && !hideSelectAllInHeader && (
                 <TableCell>
                   <Checkbox
                     data-testid="utxo-check-all"
@@ -157,6 +202,7 @@ class UTXOSet extends React.Component {
                   />
                 </TableCell>
               )}
+              {hideSelectAllInHeader && <TableCell />}
               <TableCell>Number</TableCell>
               <TableCell>TXID</TableCell>
               <TableCell>Index</TableCell>
@@ -189,13 +235,31 @@ UTXOSet.propTypes = {
   multisig: PropTypes.oneOfType([PropTypes.shape({}), PropTypes.bool]),
   bip32Path: PropTypes.string,
   showSelection: PropTypes.bool,
+  hideSelectAllInHeader: PropTypes.bool,
+  selectAll: PropTypes.bool,
   finalizedOutputs: PropTypes.bool.isRequired,
+  node: PropTypes.shape({
+    addressUsed: PropTypes.bool,
+    balanceSats: PropTypes.shape({
+      isEqualTo: PropTypes.func,
+      isGreaterThan: PropTypes.func,
+    }),
+    bip32Path: PropTypes.string,
+    multisig: PropTypes.shape({
+      address: PropTypes.string,
+    }),
+    spend: PropTypes.bool,
+    utxos: PropTypes.arrayOf(PropTypes.shape({})),
+  }),
 };
 
 UTXOSet.defaultProps = {
   multisig: false,
   bip32Path: "",
   showSelection: true,
+  hideSelectAllInHeader: false,
+  selectAll: true,
+  node: {},
 };
 
 function mapStateToProps(state) {
