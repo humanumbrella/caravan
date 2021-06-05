@@ -74,7 +74,14 @@ class UTXOSet extends React.Component {
   };
 
   setInputsAndUpdateDisplay = (incomingInputs) => {
-    const { setInputs, multisig, bip32Path, inputs } = this.props;
+    const {
+      setInputs,
+      multisig,
+      bip32Path,
+      existingTransactionInputs,
+      setSpendCheckbox,
+      inputs,
+    } = this.props;
     const { localInputs } = this.state;
     let inputsToSpend = incomingInputs.filter((input) => input.checked);
     if (multisig) {
@@ -90,13 +97,17 @@ class UTXOSet extends React.Component {
       inputsSatsSelected: satsSelected,
     });
 
-    // at this point we have inputs from the store
-    // as well as selected inputs from this particular node
-    // what we need to do is add em together and dedupe
-    // then call setInputs on the result.
+    // at this point we have 3 sets of inputs:
+    //
+    // 1. localInputs from this component's state
+    // 2. transaction.inputs from the store
+    // 3. selectedInputs
+    //
+    // what we need to do is union selectedInputs + transaction.inputs
+    // and then dedupe ... finally calling setInputs on the result.
 
     // GOTTA BE SMART HERE BC CANT DUPLICATE
-    const notMyInputs = inputs.filter((input) => {
+    const notMyInputs = existingTransactionInputs.filter((input) => {
       const utxoMatch = localInputs.filter((localInput) => {
         return (
           localInput.txid === input.txid && localInput.index === input.index
@@ -105,9 +116,13 @@ class UTXOSet extends React.Component {
       return utxoMatch.length === 0;
     });
 
+    let totalInputsToSpend = inputsToSpend;
+
     if (notMyInputs.length > 0) {
       // we have some inputs already in the store
-      console.log(`existing inputs already in props: ${inputs.length}`);
+      console.log(
+        `existing inputs already in props: ${existingTransactionInputs.length}`
+      );
       // cannot simply concat bc we will get duplicates ...
 
       // there are two factors to keep in mind:
@@ -116,16 +131,28 @@ class UTXOSet extends React.Component {
 
       // return utxo.txid === input.txid && utxo.index === input.index;
 
-      inputsToSpend = inputsToSpend.concat(notMyInputs);
+      totalInputsToSpend = inputsToSpend.concat(notMyInputs);
     }
 
-    if (inputsToSpend.length > 0) {
+    if (totalInputsToSpend.length > 0) {
       console.log(
-        `going to set transaction inputs to: ${inputsToSpend.length}`
+        `going to set transaction inputs to: ${totalInputsToSpend.length}`
       );
-      setInputs(inputsToSpend);
+      setInputs(totalInputsToSpend);
     } else if (multisig) {
       setInputs([]);
+    }
+
+    // lets make sure the root checkbox is displayed correctly
+    const numInputsToSpend = localInputs.filter((input) => input.checked)
+      .length;
+
+    if (numInputsToSpend === 0) {
+      setSpendCheckbox(false);
+    } else if (numInputsToSpend >= 1 && numInputsToSpend < localInputs.length) {
+      setSpendCheckbox("indeterminate");
+    } else {
+      setSpendCheckbox(true);
     }
   };
 
@@ -175,7 +202,6 @@ class UTXOSet extends React.Component {
 
   render() {
     const {
-      inputs,
       inputsTotalSats,
       showSelection = true,
       hideSelectAllInHeader,

@@ -16,8 +16,33 @@ import {
 import { WALLET_MODES } from "../../actions/walletActions";
 
 class Node extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      indeterminate: false,
+      checked: false,
+    };
+  }
+
   componentDidMount = () => {
     this.generate();
+  };
+
+  setSpendCheckbox = (value) => {
+    console.log(`set checkbox called w ${value}`);
+    const { spend } = this.props;
+    // const fakeEvent = { target: { checked: value } };
+    if (value === "indeterminate") {
+      this.setState({ indeterminate: true, checked: false });
+    } else if (value === spend) {
+      // if value is true - means we clicked all the inputs one by one
+      // and maxed (or zeroed) em out - so we should really call handleSpend
+      // with a fake Event in either of those cases.\
+      this.setState({ indeterminate: false, checked: value });
+    } else {
+      this.setState({ indeterminate: false, checked: value });
+      // this.handleSpend(fakeEvent);
+    }
   };
 
   render = () => {
@@ -31,6 +56,7 @@ class Node extends React.Component {
       walletMode,
       addressKnown,
     } = this.props;
+    const { indeterminate, checked } = this.state;
     const spending = walletMode === WALLET_MODES.SPEND;
     return (
       <TableRow key={bip32Path}>
@@ -40,8 +66,9 @@ class Node extends React.Component {
               id={bip32Path}
               name="spend"
               onChange={this.handleSpend}
-              checked={spend}
+              checked={checked}
               disabled={!fetchedUTXOs || balanceSats.isEqualTo(0)}
+              indeterminate={indeterminate}
             />
           </TableCell>
         )}
@@ -71,7 +98,12 @@ class Node extends React.Component {
 
   renderAddress = () => {
     const { braidNode } = this.props;
-    return <AddressExpander node={braidNode} />;
+    return (
+      <AddressExpander
+        node={braidNode}
+        setSpendCheckbox={this.setSpendCheckbox}
+      />
+    );
   };
 
   generate = () => {

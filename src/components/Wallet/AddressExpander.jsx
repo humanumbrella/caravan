@@ -217,7 +217,7 @@ class AddressExpander extends React.Component {
   };
 
   expandContent = () => {
-    const { client, node, transaction } = this.props;
+    const { client, node, transaction, setSpendCheckbox } = this.props;
     const { utxos, balanceSats, multisig, bip32Path, spend } = node;
     const { expandMode } = this.state;
 
@@ -226,21 +226,20 @@ class AddressExpander extends React.Component {
     if (balanceSats.isEqualTo(0) && expandMode === MODE_UTXO)
       this.defaultMode();
 
-    const UTXOSetInputs =
-      transaction.inputs.length > 0 ? transaction.inputs : utxos;
-
     switch (expandMode) {
       case MODE_UTXO:
         return (
           <Grid item md={12}>
             <UTXOSet
-              inputs={UTXOSetInputs}
+              inputs={utxos}
+              existingTransactionInputs={transaction.inputs}
               inputsTotalSats={balanceSats}
               multisig={multisig}
               bip32Path={bip32Path}
               hideSelectAllInHeader
               selectAll={spend}
               node={node}
+              setSpendCheckbox={setSpendCheckbox}
             />
           </Grid>
         );
