@@ -28,27 +28,33 @@ class Node extends React.Component {
     this.generate();
   };
 
+  // We're going to pass this down to the UTXOSet so it can call
+  // this fn from in that deeper child component to update state here.
   setSpendCheckbox = (value) => {
-    console.log(`set checkbox called w ${value}`);
     const { spend } = this.props;
-    // const fakeEvent = { target: { checked: value } };
     if (value === "indeterminate") {
       this.setState({ indeterminate: true, checked: false });
+      this.markSpending(true);
     } else if (value === spend) {
       // if value is true - means we clicked all the inputs one by one
       // and maxed (or zeroed) em out - so we should really call handleSpend
       // with a fake Event in either of those cases.\
       this.setState({ indeterminate: false, checked: value });
+      this.markSpending(value);
     } else {
       this.setState({ indeterminate: false, checked: value });
-      // this.handleSpend(fakeEvent);
+      this.markSpending(false);
     }
+  };
+
+  markSpending = (value) => {
+    const { change, bip32Path, updateNode } = this.props;
+    updateNode(change, { spend: value, bip32Path });
   };
 
   render = () => {
     const {
       bip32Path,
-      spend,
       fetchedUTXOs,
       balanceSats,
       multisig,
@@ -127,7 +133,21 @@ class Node extends React.Component {
       feeRate,
     } = this.props;
     let newInputs;
-    if (e.target.checked) {
+
+    if (e.target.getAttribute("data-indeterminate")) {
+      // remove any inputs that are ours
+      newInputs = inputs.filter((input) => {
+        const newUtxos = utxos.filter((utxo) => {
+          return utxo.txid === input.txid && utxo.index === input.index;
+        });
+        return newUtxos.length === 0;
+      });
+      // then add all ours back
+      newInputs = newInputs.concat(
+        utxos.map((utxo) => ({ ...utxo, multisig, bip32Path }))
+      );
+      this.setState({ indeterminate: false, checked: true });
+    } else if (e.target.checked) {
       newInputs = inputs.concat(
         utxos.map((utxo) => ({ ...utxo, multisig, bip32Path }))
       );

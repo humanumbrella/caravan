@@ -43,10 +43,40 @@ class UTXOSet extends React.Component {
   }
 
   componentDidUpdate(prevProps, prevState, snapshot) {
-    const { node } = this.props;
-    if (prevProps.node.spend !== node.spend) {
+    const { node, multisig, selectedInputs } = this.props;
+    const { localInputs } = this.state;
+
+    // None of this needs to happen on the redeem script interface
+    if (multisig) {
+      // We need to respond to the node having it's "spend/select" checkbox clicked.
+      // In the case where it's empty or full, it's a trivial check and we just toggle everyone
+      // E.g. we were spending this thing, and now we're not.
+
+      const prevMyInputsBeingSpent = localInputs.filter((input) => {
+        const included = prevProps.selectedInputs.filter((utxo) => {
+          return utxo.txid === input.txid && utxo.index === input.index;
+        });
+        return included.length > 0;
+      }).length;
+
+      // --> are all of my inputs in the transaction? Means something upstream clicked 'all' ... so toggle
+      const myInputsBeingSpent = localInputs.filter((input) => {
+        const included = selectedInputs.filter((utxo) => {
+          return utxo.txid === input.txid && utxo.index === input.index;
+        });
+        return included.length > 0;
+      }).length;
+
+      const fullSpend = myInputsBeingSpent === localInputs.length;
       // the parent component has been checked or unchecked so we need to select or deselect all
-      this.toggleAll(node.spend);
+      // but don't do it on a single utxo selected
+      if (
+        (prevProps.node.spend !== node.spend ||
+          myInputsBeingSpent !== prevMyInputsBeingSpent) &&
+        fullSpend
+      ) {
+        this.toggleAll(node.spend);
+      }
     }
   }
 
@@ -96,63 +126,55 @@ class UTXOSet extends React.Component {
     this.setState({
       inputsSatsSelected: satsSelected,
     });
-
-    // at this point we have 3 sets of inputs:
-    //
-    // 1. localInputs from this component's state
-    // 2. transaction.inputs from the store
-    // 3. selectedInputs
-    //
-    // what we need to do is union selectedInputs + transaction.inputs
-    // and then dedupe ... finally calling setInputs on the result.
-
-    // GOTTA BE SMART HERE BC CANT DUPLICATE
-    const notMyInputs = existingTransactionInputs.filter((input) => {
-      const utxoMatch = localInputs.filter((localInput) => {
-        return (
-          localInput.txid === input.txid && localInput.index === input.index
-        );
-      });
-      return utxoMatch.length === 0;
-    });
-
     let totalInputsToSpend = inputsToSpend;
 
-    if (notMyInputs.length > 0) {
-      // we have some inputs already in the store
-      console.log(
-        `existing inputs already in props: ${existingTransactionInputs.length}`
-      );
-      // cannot simply concat bc we will get duplicates ...
+    if (multisig) {
+      // at this point we have 3 sets of inputs:
+      //
+      // 1. localInputs from this component's state
+      // 2. transaction.inputs from the store
+      // 3. selectedInputs
+      //
+      // what we need to do is union selectedInputs + transaction.inputs
+      // and then dedupe ... finally calling setInputs on the result.
+      const notMyInputs = existingTransactionInputs.filter((input) => {
+        const utxoMatch = localInputs.filter((localInput) => {
+          return (
+            localInput.txid === input.txid && localInput.index === input.index
+          );
+        });
+        return utxoMatch.length === 0;
+      });
 
-      // there are two factors to keep in mind:
-      // 1 - there are existing inputs in the store from *another* node/address
-      // 2 - there are existing inputs in the store from *this* node/address [ignore]
+      if (notMyInputs.length > 0) {
+        // we have some inputs already in the store. Givem that,
+        // there are two factors to keep in mind:
+        // 1 - there are existing inputs in the store from *another* node/address
+        // 2 - there are existing inputs in the store from *this* node/address [ignore]
 
-      // return utxo.txid === input.txid && utxo.index === input.index;
+        totalInputsToSpend = inputsToSpend.concat(notMyInputs);
+      }
 
-      totalInputsToSpend = inputsToSpend.concat(notMyInputs);
+      // lets make sure the root checkbox is displayed correctly
+      const numInputsToSpend = localInputs.filter((input) => input.checked)
+        .length;
+
+      if (numInputsToSpend === 0) {
+        setSpendCheckbox(false);
+      } else if (
+        numInputsToSpend >= 1 &&
+        numInputsToSpend < localInputs.length
+      ) {
+        setSpendCheckbox("indeterminate");
+      } else {
+        setSpendCheckbox(true);
+      }
     }
 
     if (totalInputsToSpend.length > 0) {
-      console.log(
-        `going to set transaction inputs to: ${totalInputsToSpend.length}`
-      );
       setInputs(totalInputsToSpend);
     } else if (multisig) {
       setInputs([]);
-    }
-
-    // lets make sure the root checkbox is displayed correctly
-    const numInputsToSpend = localInputs.filter((input) => input.checked)
-      .length;
-
-    if (numInputsToSpend === 0) {
-      setSpendCheckbox(false);
-    } else if (numInputsToSpend >= 1 && numInputsToSpend < localInputs.length) {
-      setSpendCheckbox("indeterminate");
-    } else {
-      setSpendCheckbox(true);
     }
   };
 
@@ -292,6 +314,7 @@ function mapStateToProps(state) {
   return {
     ...state.settings,
     finalizedOutputs: state.spend.transaction.finalizedOutputs,
+    selectedInputs: state.spend.transaction.inputs,
   };
 }
 
