@@ -42,8 +42,9 @@ class UTXOSet extends React.Component {
     };
   }
 
+  // eslint-disable-next-line no-unused-vars
   componentDidUpdate(prevProps, prevState, snapshot) {
-    const { node, multisig, selectedInputs } = this.props;
+    const { node, multisig, existingTransactionInputs } = this.props;
     const { localInputs } = this.state;
 
     // None of this needs to happen on the redeem script interface
@@ -53,7 +54,7 @@ class UTXOSet extends React.Component {
       // E.g. we were spending this thing, and now we're not.
 
       const prevMyInputsBeingSpent = localInputs.filter((input) => {
-        const included = prevProps.selectedInputs.filter((utxo) => {
+        const included = prevProps.existingTransactionInputs.filter((utxo) => {
           return utxo.txid === input.txid && utxo.index === input.index;
         });
         return included.length > 0;
@@ -61,7 +62,7 @@ class UTXOSet extends React.Component {
 
       // --> are all of my inputs in the transaction? Means something upstream clicked 'all' ... so toggle
       const myInputsBeingSpent = localInputs.filter((input) => {
-        const included = selectedInputs.filter((utxo) => {
+        const included = existingTransactionInputs.filter((utxo) => {
           return utxo.txid === input.txid && utxo.index === input.index;
         });
         return included.length > 0;
@@ -110,7 +111,6 @@ class UTXOSet extends React.Component {
       bip32Path,
       existingTransactionInputs,
       setSpendCheckbox,
-      inputs,
     } = this.props;
     const { localInputs } = this.state;
     let inputsToSpend = incomingInputs.filter((input) => input.checked);
@@ -287,18 +287,10 @@ UTXOSet.propTypes = {
   selectAll: PropTypes.bool,
   finalizedOutputs: PropTypes.bool.isRequired,
   node: PropTypes.shape({
-    addressUsed: PropTypes.bool,
-    balanceSats: PropTypes.shape({
-      isEqualTo: PropTypes.func,
-      isGreaterThan: PropTypes.func,
-    }),
-    bip32Path: PropTypes.string,
-    multisig: PropTypes.shape({
-      address: PropTypes.string,
-    }),
     spend: PropTypes.bool,
-    utxos: PropTypes.arrayOf(PropTypes.shape({})),
   }),
+  existingTransactionInputs: PropTypes.arrayOf(PropTypes.shape({})),
+  setSpendCheckbox: PropTypes.func,
 };
 
 UTXOSet.defaultProps = {
@@ -308,13 +300,15 @@ UTXOSet.defaultProps = {
   hideSelectAllInHeader: false,
   selectAll: true,
   node: {},
+  existingTransactionInputs: [],
+  setSpendCheckbox: () => {},
 };
 
 function mapStateToProps(state) {
   return {
     ...state.settings,
     finalizedOutputs: state.spend.transaction.finalizedOutputs,
-    selectedInputs: state.spend.transaction.inputs,
+    existingTransactionInputs: state.spend.transaction.inputs,
   };
 }
 

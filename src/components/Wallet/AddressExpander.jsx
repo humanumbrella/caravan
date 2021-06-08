@@ -217,7 +217,7 @@ class AddressExpander extends React.Component {
   };
 
   expandContent = () => {
-    const { client, node, transaction, setSpendCheckbox } = this.props;
+    const { client, node, setSpendCheckbox } = this.props;
     const { utxos, balanceSats, multisig, bip32Path, spend } = node;
     const { expandMode } = this.state;
 
@@ -232,7 +232,6 @@ class AddressExpander extends React.Component {
           <Grid item md={12}>
             <UTXOSet
               inputs={utxos}
-              existingTransactionInputs={transaction.inputs}
               inputsTotalSats={balanceSats}
               multisig={multisig}
               bip32Path={bip32Path}
@@ -428,10 +427,12 @@ AddressExpander.propTypes = {
   network: PropTypes.string,
   requiredSigners: PropTypes.number.isRequired,
   totalSigners: PropTypes.number.isRequired,
+  setSpendCheckbox: PropTypes.func,
 };
 
 AddressExpander.defaultProps = {
   network: NETWORKS.TESTNET,
+  setSpendCheckbox: () => {},
 };
 
 function mapStateToProps(state) {
