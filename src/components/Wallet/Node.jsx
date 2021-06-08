@@ -28,20 +28,18 @@ class Node extends React.Component {
     this.generate();
   };
 
-  // We're going to pass this down to the UTXOSet so it can call
-  // this fn from in that deeper child component to update state here.
+  // Passing this fn down to the UTXOSet so we can get updates here, from there.
   setSpendCheckbox = (value) => {
     const { spend } = this.props;
     if (value === "indeterminate") {
       this.setState({ indeterminate: true, checked: false });
       this.markSpending(true);
     } else if (value === spend) {
-      // if value is true - means we clicked all the inputs one by one
-      // and maxed (or zeroed) em out - so we should really call handleSpend
-      // with a fake Event in either of those cases.\
+      // handles select/de-select all as well as have selected some and click select all
       this.setState({ indeterminate: false, checked: value });
       this.markSpending(value);
     } else {
+      // handles the case of de-selecting one-by-one until there's nothing left selected
       this.setState({ indeterminate: false, checked: value });
       this.markSpending(false);
     }

@@ -44,42 +44,49 @@ class UTXOSet extends React.Component {
 
   // eslint-disable-next-line no-unused-vars
   componentDidUpdate(prevProps, prevState, snapshot) {
-    const { node, multisig, existingTransactionInputs } = this.props;
-    const { localInputs } = this.state;
-
-    // None of this needs to happen on the redeem script interface
+    // This function exists because we need to respond to the parent node having
+    // its select/spend checkbox clicked (toggling select-all or select-none).
+    // None of this needs to happen on the redeem script interface.
+    const { multisig } = this.props;
     if (multisig) {
-      // We need to respond to the node having it's "spend/select" checkbox clicked.
-      // In the case where it's empty or full, it's a trivial check and we just toggle everyone
-      // E.g. we were spending this thing, and now we're not.
+      const { node, existingTransactionInputs } = this.props;
+      const { localInputs } = this.state;
+      const prevMyInputsBeingSpent = this.filterInputs(
+        localInputs,
+        prevProps.existingTransactionInputs,
+        true
+      ).length;
+      const myInputsBeingSpent = this.filterInputs(
+        localInputs,
+        existingTransactionInputs,
+        true
+      ).length;
 
-      const prevMyInputsBeingSpent = localInputs.filter((input) => {
-        const included = prevProps.existingTransactionInputs.filter((utxo) => {
-          return utxo.txid === input.txid && utxo.index === input.index;
-        });
-        return included.length > 0;
-      }).length;
+      const isFullSpend = myInputsBeingSpent === localInputs.length;
 
-      // --> are all of my inputs in the transaction? Means something upstream clicked 'all' ... so toggle
-      const myInputsBeingSpent = localInputs.filter((input) => {
-        const included = existingTransactionInputs.filter((utxo) => {
-          return utxo.txid === input.txid && utxo.index === input.index;
-        });
-        return included.length > 0;
-      }).length;
-
-      const fullSpend = myInputsBeingSpent === localInputs.length;
-      // the parent component has been checked or unchecked so we need to select or deselect all
-      // but don't do it on a single utxo selected
+      // If the spend bool on the node changes, toggleAll the checks.
+      // but that's not quite enough because if a single UTXO is selected
+      // then it is also marked from not spend -> spend ... so don't want
+      // to toggleAll in that case. Furthermore, if you have 5 UTXOs and
+      // 2 selected and *then* click select all ... we also need to toggelAll.
       if (
         (prevProps.node.spend !== node.spend ||
           myInputsBeingSpent !== prevMyInputsBeingSpent) &&
-        fullSpend
+        isFullSpend
       ) {
         this.toggleAll(node.spend);
       }
     }
   }
+
+  filterInputs = (localInputs, transactionStoreInputs, filterToMyInputs) => {
+    return localInputs.filter((input) => {
+      const included = transactionStoreInputs.filter((utxo) => {
+        return utxo.txid === input.txid && utxo.index === input.index;
+      });
+      return filterToMyInputs ? included.length > 0 : included.length === 0;
+    });
+  };
 
   toggleInput = (inputIndex) => {
     const { localInputs } = this.state;
@@ -128,42 +135,31 @@ class UTXOSet extends React.Component {
     });
     let totalInputsToSpend = inputsToSpend;
 
+    // The following is only relevant on the wallet interface
     if (multisig) {
-      // at this point we have 3 sets of inputs:
-      //
-      // 1. localInputs from this component's state
-      // 2. transaction.inputs from the store
-      // 3. selectedInputs
-      //
-      // what we need to do is union selectedInputs + transaction.inputs
-      // and then dedupe ... finally calling setInputs on the result.
-      const notMyInputs = existingTransactionInputs.filter((input) => {
-        const utxoMatch = localInputs.filter((localInput) => {
-          return (
-            localInput.txid === input.txid && localInput.index === input.index
-          );
-        });
-        return utxoMatch.length === 0;
-      });
+      // There are 3 total sets of inputs to care about:
+      // 1. localInputs - all inputs from this node/address
+      // 2. inputsToSpend - equal to or subset of those from #1 (inputs marked checked==true)
+      // 3. existingTransactionInputs - all inputs from all nodes/addresses
+
+      // Check if #3 contains any inputs not associated with this component
+      const notMyInputs = this.filterInputs(
+        existingTransactionInputs,
+        localInputs,
+        false
+      );
 
       if (notMyInputs.length > 0) {
-        // we have some inputs already in the store. Givem that,
-        // there are two factors to keep in mind:
-        // 1 - there are existing inputs in the store from *another* node/address
-        // 2 - there are existing inputs in the store from *this* node/address [ignore]
-
         totalInputsToSpend = inputsToSpend.concat(notMyInputs);
       }
 
-      // lets make sure the root checkbox is displayed correctly
-      const numInputsToSpend = localInputs.filter((input) => input.checked)
-        .length;
-
-      if (numInputsToSpend === 0) {
+      // Now we push a change up to the top level node so it can update its checkbox
+      const numLocalInputsToSpend = inputsToSpend.length;
+      if (numLocalInputsToSpend === 0) {
         setSpendCheckbox(false);
       } else if (
-        numInputsToSpend >= 1 &&
-        numInputsToSpend < localInputs.length
+        numLocalInputsToSpend >= 1 &&
+        numLocalInputsToSpend < localInputs.length
       ) {
         setSpendCheckbox("indeterminate");
       } else {
@@ -174,6 +170,7 @@ class UTXOSet extends React.Component {
     if (totalInputsToSpend.length > 0) {
       setInputs(totalInputsToSpend);
     } else if (multisig) {
+      // If we do this on redeem script interface, the panel will disappear
       setInputs([]);
     }
   };
