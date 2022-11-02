@@ -1,13 +1,4 @@
 /*
- * [hi-base32]{@link https://github.com/emn178/hi-base32}
- *
- * @version 0.5.0
- * @author Chen, Yi-Cyuan [emn178@gmail.com]
- * @copyright Chen, Yi-Cyuan 2015-2018
- * @license MIT
- */
-
-/*
 object-assign
 (c) Sindre Sorhus
 @license MIT
@@ -122,6 +113,8 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * Copyright (c) 2014-2017, Christopher Jeffrey (MIT License).
  * https://github.com/bcoin-org/bcoin
  */
+
+/*! regenerator-runtime -- Copyright (c) 2014-present, Facebook, Inc. -- license (MIT): https://github.com/facebook/regenerator/blob/main/LICENSE */
 
 /*! safe-buffer. MIT License. Feross Aboukhadijeh <https://feross.org/opensource> */
 
