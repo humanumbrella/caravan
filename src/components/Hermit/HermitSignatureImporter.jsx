@@ -1,9 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
-import {
-  unsignedMultisigPSBT,
-  parseSignatureArrayFromPSBT,
-} from "unchained-bitcoin";
+import { parseSignatureArrayFromPSBT } from "unchained-bitcoin";
 import {
   HERMIT,
   PENDING,
@@ -33,15 +30,11 @@ class HermitSignatureImporter extends React.Component {
   }
 
   interaction = () => {
-    const { network, inputs, outputs, unsignedPsbt } = this.props;
-
-    const psbtBase64 =
-      unsignedPsbt ||
-      unsignedMultisigPSBT(network, inputs, outputs, true).toBase64();
+    const { unsignedPsbt } = this.props;
 
     return SignMultisigTransaction({
       keystore: HERMIT,
-      psbt: psbtBase64,
+      psbt: unsignedPsbt,
     });
   };
 
@@ -194,9 +187,6 @@ class HermitSignatureImporter extends React.Component {
 }
 
 HermitSignatureImporter.propTypes = {
-  network: PropTypes.string.isRequired,
-  inputs: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  outputs: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   signatureImporter: PropTypes.shape({
     bip32Path: PropTypes.string,
   }).isRequired,
