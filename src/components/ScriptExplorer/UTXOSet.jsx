@@ -46,8 +46,8 @@ class UTXOSet extends React.Component {
     // This function exists because we need to respond to the parent node having
     // its select/spend checkbox clicked (toggling select-all or select-none).
     // None of this needs to happen on the redeem script interface.
-    const { multisig } = this.props;
-    if (multisig) {
+    const { multisig, autoSpend } = this.props;
+    if (multisig && !autoSpend) {
       const { node, existingTransactionInputs } = this.props;
       const { localInputs } = this.state;
       const prevMyInputsBeingSpent = this.filterInputs(
@@ -284,6 +284,7 @@ UTXOSet.propTypes = {
   }),
   existingTransactionInputs: PropTypes.arrayOf(PropTypes.shape({})),
   setSpendCheckbox: PropTypes.func,
+  autoSpend: PropTypes.bool.isRequired,
 };
 
 UTXOSet.defaultProps = {
@@ -300,6 +301,7 @@ UTXOSet.defaultProps = {
 function mapStateToProps(state) {
   return {
     ...state.settings,
+    autoSpend: state.spend.transaction.autoSpend,
     finalizedOutputs: state.spend.transaction.finalizedOutputs,
     existingTransactionInputs: state.spend.transaction.inputs,
   };
